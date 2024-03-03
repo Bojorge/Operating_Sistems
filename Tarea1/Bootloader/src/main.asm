@@ -5,7 +5,7 @@ main:
     hlt
 
 halt:
-    jmp halt
+    jmp halt    ;infinite loop
 
 times 510-($-$$) db 0
 dw 0aa55h
