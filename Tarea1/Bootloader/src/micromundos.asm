@@ -48,28 +48,28 @@ game_loop:
 
 move_up:
     cmp word [playerY], 0  ; Check if at top of screen
-    jle game_loop          ; If at top, don't move up
+    jle game_loop          ; If at top, dont move up
     dec word [playerY]     ; Move player up
     call draw_player
     jmp game_loop
 
 move_down:
     cmp word [playerY], SCREENH - 1    ; Check if at bottom of screen
-    jge game_loop                       ; If at bottom, don't move down
+    jge game_loop                       ; If at bottom, dont move down
     inc word [playerY]                  ; Move player down
     call draw_player
     jmp game_loop
 
 move_left:
     cmp word [playerX], 0  ; Check if at left edge of screen
-    jle game_loop          ; If at left edge, don't move left
+    jle game_loop          ; If at left edge, dont move left
     dec word [playerX]     ; Move player left
     call draw_player
     jmp game_loop
 
 move_right:
     cmp word [playerX], SCREENW - 1    ; Check if at right edge of screen
-    jge game_loop                       ; If at right edge, don't move right
+    jge game_loop                       ; If at right edge, dont move right
     inc word [playerX]                  ; Move player right
     call draw_player
     jmp game_loop

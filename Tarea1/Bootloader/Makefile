@@ -1,7 +1,7 @@
-ASM_FILES = ./src/main ./src/micromundos ./src/test
+ASM_FILES = ./src/main ./src/micromundos
 
 all: $(ASM_FILES)
-	cat main.bin micromundos.bin test.bin > micromundos
+	cat main.bin micromundos.bin > micromundos
 	rm *.bin
 	mv micromundos micromundos.bin
 
