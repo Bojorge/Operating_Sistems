@@ -164,7 +164,7 @@ write_string:
     loop .loop      ; decrement CX; if CX != 0, jmp to label
     ret             ; return to caller
 
-;; Subroutine to change a line's colors
+;; Subroutine to change a lines colors
 ;;  Inputs:
 ;;    BL = colors to change to (bits 0-3 = FG color, 4-7 = BG color)
 change_line_colors:

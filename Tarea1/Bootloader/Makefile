@@ -1,13 +1,17 @@
-ASM=nasm
+ASM_FILES = ./src/main ./src/micromundos ./src/test
 
-SRC_DIR=src
-BULD_DIR=build
-
-$(BULD_DIR)/main.img: $(BULD_DIR)/main.bin
-	cp $(BULD_DIR)/main.bin $(BULD_DIR)/main.img
-	truncate -s 1440k $(BULD_DIR)/main.img 
+all: $(ASM_FILES)
+	cat main.bin micromundos.bin test.bin > micromundos
+	rm *.bin
+	mv micromundos micromundos.bin
 
 
-$(BULD_DIR)/main.bin: $(SRC_DIR)/main.asm
-	$(ASM) $(SRC_DIR)/main.asm -f bin -o $(BULD_DIR)/main.bin
+$(ASM_FILES):
+	nasm -f bin $@.asm -o $@.bin
+	mv $@.bin ./
+
+clean:
+	rm *.bin
 	
+run:
+	qemu-system-i386 -drive format=raw,file=micromundos.bin
