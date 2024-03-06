@@ -5,7 +5,7 @@ org 8000h   ; Set memory offsets to start here
 VIDMEM      equ 0B800h       ; Color text mode VGA memory location
 SCREENW     equ 80           ; Screen width
 SCREENH     equ 25           ; Screen height
-PLAYERCHAR  equ 178          ; ASCII code for player character (▓)
+PLAYERCHAR  equ 248          ; ASCII code for player character (°)
 PLAYERCOLOR equ 02h          ; Green color for the player
 
 ;; VARIABLES -----------
@@ -36,13 +36,13 @@ game_loop:
     ;; Get player input
     mov ah, 0           ; BIOS keyboard input function
     int 16h             ; Wait for key press
-    cmp ah, 11h         ; W key
+    cmp ah, 48h         ; Up arrow key
     je move_up
-    cmp ah, 1Fh         ; S key
+    cmp ah, 50h         ; Down arrow key
     je move_down
-    cmp ah, 1Eh         ; A key
+    cmp ah, 4Bh         ; Left arrow key
     je move_left
-    cmp ah, 20h         ; D key
+    cmp ah, 4Dh         ; Right arrow key
     je move_right
     jmp game_loop       ; Wait for valid key press
 
