@@ -22,11 +22,7 @@ setup_game:
     mov ax, VIDMEM
     mov es, ax          ; ES:DI <- video memory (0B800:0000 or B8000)
 
-    ;; Hide cursor
-    inc ah
-    mov ch, 25
-    int 10h
-
+    
     ;; Initialize player position
     mov ax, [playerX]
     mov bx, [playerY]
@@ -36,6 +32,8 @@ game_loop:
     ;; Get player input
     mov ah, 0           ; BIOS keyboard input function
     int 16h             ; Wait for key press
+
+
     cmp ah, 48h         ; Up arrow key
     je move_up
     cmp ah, 50h         ; Down arrow key
@@ -44,7 +42,63 @@ game_loop:
     je move_left
     cmp ah, 4Dh         ; Right arrow key
     je move_right
+
+
+    cmp ah, 10h         ; Q key (SurOeste)
+    je move_southwest
+    cmp ah, 12h         ; E key (SurEste)
+    je move_southest
+    cmp ah, 1Eh         ; A key (NorOeste)
+    je move_northwest
+    cmp ah, 20h         ; D key (NorEste)
+    je move_northest
+    
     jmp game_loop       ; Wait for valid key press
+
+
+move_southwest:
+    ;cmp word [playerY], SCREENH   ; Check if at bottom of screen
+    ;cmp word [playerX], 0  ; Check if at left edge of screen
+    ;jle game_loop          ; dont move up
+    
+    inc word [playerY]     ; Move player down
+    dec word [playerX]     ; Move player left
+    call draw_player
+    jmp game_loop
+
+
+move_southest:
+    ;cmp word [playerY], SCREENH   ; Check if at bottom of screen
+    ;cmp word [playerX], SCREENW  ; Check if at right edge of screen
+    ;jle game_loop          ; dont move up
+    
+    inc word [playerY]     ; Move player down
+    inc word [playerX]     ; Move player right
+    call draw_player
+    jmp game_loop
+
+move_northwest:
+    ;cmp word [playerY], 0   ; Check if at top of screen
+    ;cmp word [playerX], 0  ; Check if at left edge of screen
+    ;jle game_loop          ; dont move up
+    
+    dec word [playerY]     ; Move player down
+    dec word [playerX]     ; Move player right
+    call draw_player
+    jmp game_loop
+
+
+move_northest:
+    ;cmp word [playerY], 0   ; Check if at top of screen
+    ;cmp word [playerX], SCREENW  ; Check if at right edge of screen
+    ;jle game_loop          ; dont move up
+    
+    dec word [playerY]     ; Move player down
+    inc word [playerX]     ; Move player right
+    call draw_player
+    jmp game_loop
+
+
 
 move_up:
     cmp word [playerY], 0  ; Check if at top of screen
@@ -54,7 +108,7 @@ move_up:
     jmp game_loop
 
 move_down:
-    cmp word [playerY], SCREENH - 1    ; Check if at bottom of screen
+    cmp word [playerY], SCREENH    ; Check if at bottom of screen
     jge game_loop                       ; If at bottom, dont move down
     inc word [playerY]                  ; Move player down
     call draw_player
@@ -68,7 +122,7 @@ move_left:
     jmp game_loop
 
 move_right:
-    cmp word [playerX], SCREENW - 1    ; Check if at right edge of screen
+    cmp word [playerX], SCREENW    ; Check if at right edge of screen
     jge game_loop                       ; If at right edge, dont move right
     inc word [playerX]                  ; Move player right
     call draw_player

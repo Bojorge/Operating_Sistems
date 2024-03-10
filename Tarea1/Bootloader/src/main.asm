@@ -4,7 +4,7 @@ jmp short start
 
 
 ;; Variables
-initial_message: db 'Presiona Enter para iniciar el juego'
+initial_message: db 'Presionar tecla ENTER para iniciar micromundos'
 .len equ ($-initial_message)
 
 start:
@@ -18,8 +18,8 @@ start:
     mov es, ax      ; ES = Memoria de video en modo texto color (B8000)
     xor di, di      ; ES:DI = Puntero a la memoria de video
 
-    ;; Limpiar pantalla con fondo azul
-    mov ax, 1020h       ; AH = color de fondo (1 = azul), AL = espacio ASCII (0)
+    ;; Limpiar pantalla con fondo verde
+    mov ax, 2020h       ; AH = color de fondo (2 = verde), AL = espacio ASCII (0)
     mov cx, 80*25       ; Número de caracteres en la pantalla
     rep stosw           ; Escribir todos los caracteres en la memoria de video
     xor di, di          ; Resetear di
@@ -37,15 +37,13 @@ wait_for_enter:
     jne wait_for_enter  ; Si no fue "Enter", continuar esperando
 
     ;; Limpiar pantalla antes de continuar
-    mov ax, 1020h   ; AH = color de fondo (1 = azul), AL = espacio ASCII (0)
+    mov ax, 2020h   ; AH = color de fondo (2 = verde), AL = espacio ASCII (0)
     mov cx, 80*25   ; Número de caracteres en la pantalla
     xor di, di      ; Resetear di
     rep stosw       ; Escribir todos los caracteres en la memoria de video
 
     ;; Saltar a la rutina para jugar
     jmp to_play
-
-
 
 to_play:
     cli
@@ -76,7 +74,7 @@ to_play:
 ;;    SI = address of string
 ;;    CX = length of string
 write_string:
-    mov ah, 17h     ; BG color (1 = blue) FG color (7 = light gray) 
+    mov ah, 42h     ; BG color (4 = red) FG color (2 = green) 
     .loop:
         lodsb       ; mov AL, [DS:SI]; inc SI
         stosw       ; Write character to video memory (ES:DI)
