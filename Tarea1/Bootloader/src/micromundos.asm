@@ -98,8 +98,6 @@ move_northest:
     call draw_player
     jmp game_loop
 
-
-
 move_up:
     cmp word [playerY], 0  ; Check if at top of screen
     jle game_loop          ; If at top, dont move up
