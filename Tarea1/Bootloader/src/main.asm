@@ -19,7 +19,7 @@ start:
     xor di, di      ; ES:DI = Puntero a la memoria de video
 
     ;; Limpiar pantalla con fondo verde
-    mov ax, 2020h       ; AH = color de fondo (2 = verde), AL = espacio ASCII (0)
+    mov ax, 1011h       ; AH = color de fondo (2 = verde), AL = espacio ASCII (0)
     mov cx, 80*25       ; Número de caracteres en la pantalla
     rep stosw           ; Escribir todos los caracteres en la memoria de video
     xor di, di          ; Resetear di

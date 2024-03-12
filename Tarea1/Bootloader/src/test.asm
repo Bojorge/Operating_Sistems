@@ -4,7 +4,7 @@ org 0x8000   ;dirección donde se va a cargar el programa
 
 jmp INICIO    ;se indica donde debe iniciar el programa
 
-sectiion .data
+section .data
     msg db "Moi", 0x0a
     len equ $ - msg
 
