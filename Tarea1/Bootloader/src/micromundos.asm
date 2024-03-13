@@ -27,9 +27,25 @@ setup_game:
     mov ax, [playerX]
     mov bx, [playerY]
 
-    mov dl, [spaceFlag]       ;space bar flag
-
+    ;; Draw player
     call draw_player
+    
+    ;; Draw countdown numbers
+    mov dx, 60           ; Start countdown from 60
+    mov di, 0           ; Starting position for countdown
+
+draw_countdown:
+    mov ah, 0Ch         ; Set character and attribute function
+    add al, '0'         ; Convert number to ASCII
+    mov cx, 2           ; Number of characters to print
+    mov bh, 00h         ; Video page number
+    mov bl, 0Fh         ; White color attribute
+    mov ah, 09h         ; BIOS function to write character and attribute
+    int 10h             ; Call BIOS interrupt
+    add di, 2           ; Move to next character position
+    dec dx              ; Decrement countdown
+    jnz draw_countdown ; Continue until countdown reaches 0
+
 
 game_loop:
     ;; Get player input
@@ -54,13 +70,9 @@ game_loop:
     cmp ah, 20h         ; D key (NorEste)
     je move_northest
 
-
     cmp ah, 39h         ; Space key
     je toggle_spaceFlag       
 
-
-    
-    
     jmp game_loop       ; Wait for valid key press
 
 
