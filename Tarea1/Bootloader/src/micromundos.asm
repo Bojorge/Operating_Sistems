@@ -11,6 +11,7 @@ PLAYERCOLOR equ 02h          ; Green color for the player
 ;; VARIABLES -----------
 playerX:    dw 80            ; Player X position
 playerY:    dw 24            ; Player Y position
+spaceFlag:  dw 0             ; Space key flag
 
 ;; LOGIC ----------------
 setup_game:
@@ -25,6 +26,9 @@ setup_game:
     ;; Initialize player position
     mov ax, [playerX]
     mov bx, [playerY]
+
+    mov dl, [spaceFlag]       ;space bar flag
+
     call draw_player
 
 game_loop:
@@ -49,13 +53,29 @@ game_loop:
     je move_northwest
     cmp ah, 20h         ; D key (NorEste)
     je move_northest
+
+
+    cmp ah, 39h         ; Space key
+    je toggle_spaceFlag       
+
+
+    
     
     jmp game_loop       ; Wait for valid key press
+
+
+toggle_spaceFlag:
+    mov dl, [spaceFlag]    
+    xor dl, 1              
+    mov [spaceFlag], dl  
+    jmp game_loop
 
 move_southwest:
     inc word [playerY]              ; Move player down
     dec word [playerX]              ; Move player left
     mov ah, 33h                    ;Color
+    ;cmp byte [spaceFlag], 1
+    ;je delete_path
     call draw_player
     jmp game_loop
 
@@ -63,6 +83,8 @@ move_southest:
     inc word [playerY]              ; Move player down
     inc word [playerX]              ; Move player right
     mov ah, 44h                    ;Color
+    ;cmp byte [spaceFlag], 1
+    ;je delete_path
     call draw_player
     jmp game_loop
 
@@ -70,6 +92,8 @@ move_northwest:
     dec word [playerY]              ; Move player up
     dec word [playerX]              ; Move player left
     mov ah, 99h                    ;Color
+    ;cmp byte [spaceFlag], 1
+    ;je delete_path
     call draw_player
     jmp game_loop
 
@@ -77,6 +101,8 @@ move_northest:
     dec word [playerY]              ; Move player up
     inc word [playerX]              ; Move player right
     mov ah, 66h                    ;Color
+    ;cmp byte [spaceFlag], 1
+    ;je delete_path
     call draw_player
     jmp game_loop
 
@@ -85,6 +111,8 @@ move_up:
     jle game_loop                  ; If at top, dont move up
     dec word [playerY]             ; Move player up
     mov ah, 87h                    ;Color
+    ;cmp byte [spaceFlag], 1
+    ;je delete_path
     call draw_player
     jmp game_loop
 
@@ -93,6 +121,8 @@ move_down:
     jge game_loop                  ; If at bottom, dont move down
     inc word [playerY]             ; Move player down
     mov ah, 64h                    ;Color
+    ;cmp byte [spaceFlag], 1
+    ;je delete_path
     call draw_player
     jmp game_loop
 
@@ -101,6 +131,8 @@ move_left:
     jle game_loop                  ; If at left edge, dont move left
     dec word [playerX]             ; Move player left
     mov ah, 45h                    ;Color
+    ;cmp byte [spaceFlag], 1
+    ;je delete_path
     call draw_player
     jmp game_loop
 
@@ -109,8 +141,14 @@ move_right:
     jge game_loop                  ; If at right edge, dont move right
     inc word [playerX]             ; Move player right
     mov ah, 31h                    ;Color
+    ;cmp byte [spaceFlag], 1
+    ;je delete_path
     call draw_player
     jmp game_loop
+
+delete_path:
+    mov ah, 11h                    ;Mismo color del fondo
+    ret
 
 draw_player:
     mov di, [playerY]              ; Calculate offset in video memory
@@ -121,6 +159,9 @@ draw_player:
     ;mov ah, PLAYERCOLOR            ; Set player color
     stosw                          ; Store character and color in video memory
     ret
+
+
+
 
 ;; Bootsector padding
 times 510-($-$$) db 0
