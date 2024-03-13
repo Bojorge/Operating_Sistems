@@ -53,26 +53,30 @@ game_loop:
     jmp game_loop       ; Wait for valid key press
 
 move_southwest:
-    inc word [playerY]  ; Move player down
-    dec word [playerX]  ; Move player left
+    inc word [playerY]              ; Move player down
+    dec word [playerX]              ; Move player left
+    mov ah, 33h                    ;Color
     call draw_player
     jmp game_loop
 
 move_southest:
-    inc word [playerY]  ; Move player down
-    inc word [playerX]  ; Move player right
+    inc word [playerY]              ; Move player down
+    inc word [playerX]              ; Move player right
+    mov ah, 44h                    ;Color
     call draw_player
     jmp game_loop
 
 move_northwest:
-    dec word [playerY]  ; Move player up
-    dec word [playerX]  ; Move player left
+    dec word [playerY]              ; Move player up
+    dec word [playerX]              ; Move player left
+    mov ah, 99h                    ;Color
     call draw_player
     jmp game_loop
 
 move_northest:
-    dec word [playerY]  ; Move player up
-    inc word [playerX]  ; Move player right
+    dec word [playerY]              ; Move player up
+    inc word [playerX]              ; Move player right
+    mov ah, 66h                    ;Color
     call draw_player
     jmp game_loop
 
@@ -80,6 +84,7 @@ move_up:
     cmp word [playerY], 0         ; Check if at top of screen
     jle game_loop                  ; If at top, dont move up
     dec word [playerY]             ; Move player up
+    mov ah, 87h                    ;Color
     call draw_player
     jmp game_loop
 
@@ -87,6 +92,7 @@ move_down:
     cmp word [playerY], SCREENH-1  ; Check if at bottom of screen
     jge game_loop                  ; If at bottom, dont move down
     inc word [playerY]             ; Move player down
+    mov ah, 64h                    ;Color
     call draw_player
     jmp game_loop
 
@@ -94,6 +100,7 @@ move_left:
     cmp word [playerX], 0         ; Check if at left edge of screen
     jle game_loop                  ; If at left edge, dont move left
     dec word [playerX]             ; Move player left
+    mov ah, 45h                    ;Color
     call draw_player
     jmp game_loop
 
@@ -101,6 +108,7 @@ move_right:
     cmp word [playerX], SCREENW-1  ; Check if at right edge of screen
     jge game_loop                  ; If at right edge, dont move right
     inc word [playerX]             ; Move player right
+    mov ah, 31h                    ;Color
     call draw_player
     jmp game_loop
 
@@ -110,7 +118,7 @@ draw_player:
     add di, [playerX]
 
     mov al, PLAYERCHAR             ; Draw player character
-    mov ah, PLAYERCOLOR            ; Set player color
+    ;mov ah, PLAYERCOLOR            ; Set player color
     stosw                          ; Store character and color in video memory
     ret
 
