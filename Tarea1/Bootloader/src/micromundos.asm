@@ -8,6 +8,9 @@ SCREENH     equ 50           ; Screen height
 PLAYERCHAR  equ 248          ; ASCII code for player character (°)
 PLAYERCOLOR equ 02h          ; Green color for the player
 
+win_msg_buffer db "WIN$"
+lose_msg_buffer db "LOSE$"
+
 ;; VARIABLES -----------
 playerX:    dw 80            ; Player X position
 playerY:    dw 24            ; Player Y position
@@ -45,7 +48,7 @@ draw_countdown:
     add di, 2           ; Move to next character position
     dec dx              ; Decrement countdown
     jnz draw_countdown ; Continue until countdown reaches 0
-
+    
 
 game_loop:
     ;; Get player input
@@ -70,13 +73,13 @@ game_loop:
     cmp ah, 20h         ; D key (NorEste)
     je move_northest
 
-    cmp ah, 39h         ; Space key
-    je toggle_spaceFlag       
+    cmp ah, 2Ch         ; Space key
+    je toggle_Flag       
 
     jmp game_loop       ; Wait for valid key press
 
 
-toggle_spaceFlag:
+toggle_Flag:
     mov dl, [spaceFlag]    
     xor dl, 1              
     mov [spaceFlag], dl  
@@ -172,7 +175,47 @@ draw_player:
     stosw                          ; Store character and color in video memory
     ret
 
+clear_screen_and_print_win:
+    ;; Clear the screen
+    mov ax, 0600h              ; Function 06h - Scroll up window
+    mov bh, 00h                ; Display all attributes
+    mov cx, 0000h              ; Upper-left corner
+    mov dx, SCREENW * SCREENH  ; Lower-right corner
+    mov es, ax                 ; ES:DI <- video memory (0B800:0000 or B8000)
+    mov di, 0000h              ; Upper-left corner
+    mov ax, 0720h              ; Space character with white on green attribute
+    mov cx, 5                  ; Total number of characters to write
+    rep stosw                  ; Clear screen by writing spaces with attributes
 
+    ;; Print "WIN" message in the center
+    mov ah, 09h                ; Function 09h - Write string
+    mov al, 0                  ; Display string until '$' character
+    mov bh, 00h                ; Video page number
+    mov bl, 02Fh               ; White text on green background
+    mov dx, win_msg_buffer     ; DX points to the message buffer
+    int 10h                    ; Call BIOS interrupt
+    ret
+
+clear_screen_and_print_lose:
+    ;; Clear the screen
+    mov ax, 0600h              ; Function 06h - Scroll up window
+    mov bh, 00h                ; Display all attributes
+    mov cx, 0000h              ; Upper-left corner
+    mov dx, SCREENW * SCREENH  ; Lower-right corner
+    mov es, ax                 ; ES:DI <- video memory (0B800:0000 or B8000)
+    mov di, 0000h              ; Upper-left corner
+    mov ax, 0720h              ; Space character with white on black attribute
+    mov cx, 5                  ; Total number of characters to write
+    rep stosw                  ; Clear screen by writing spaces with attributes
+
+    ;; Print "LOSE" message in the center
+    mov ah, 09h                ; Function 09h - Write string
+    mov al, 0                  ; Display string until '$' character
+    mov bh, 00h                ; Video page number
+    mov bl, 04Fh               ; White text on red background
+    mov dx, lose_msg_buffer    ; DX points to the message buffer
+    int 10h                    ; Call BIOS interrupt
+    ret
 
 
 ;; Bootsector padding
