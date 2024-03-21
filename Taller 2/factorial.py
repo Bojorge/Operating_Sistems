@@ -1,10 +1,10 @@
-import sys
 import time
 
-sys.setrecursionlimit(10000)
+
 
 # Función recursiva para calcular el factorial
 def factorial(n):
+    print("---")
     if n == 0 or n == 1:
         return 1
     else:
@@ -12,7 +12,7 @@ def factorial(n):
 
 # Función principal
 def main():
-    num = int(input("Ingrese un número entero: "))
+    num = 200
 
     # Inicia el temporizador
     start_time = time.time()
