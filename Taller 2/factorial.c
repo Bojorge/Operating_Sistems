@@ -3,6 +3,7 @@
 
 // Función recursiva para calcular el factorial
 unsigned long long factorial(unsigned int n) {
+    printf("------");
     if (n == 0 || n == 1)
         return 1;
     else
@@ -10,9 +11,7 @@ unsigned long long factorial(unsigned int n) {
 }
 
 int main() {
-    unsigned int num;
-    printf("Ingrese un número entero: ");
-    scanf("%u", &num);
+    unsigned int num = 200;
     
     // Inicia el temporizador
     clock_t start = clock();
