@@ -2,16 +2,19 @@ CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -std=c99
 LDFLAGS = -lrt
 
-all: sm_create sm_read sm_write
+all: creador cliente reconstructor estadisticas
 
-sm_create: sm_create.c
+creador: creador.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-sm_read: sm_read.c
+cliente: cliente.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-sm_write: sm_write.c
+reconstructor: reconstructor.c
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+estadisticas: estadisticas.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 clean:
-	rm -f sm_create sm_read sm_write
+	rm -f creador cliente reconstructor estadisticas
