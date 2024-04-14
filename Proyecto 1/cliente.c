@@ -1,81 +1,100 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <string.h>
-#include <time.h>
 
-#define MAX_CHARS 100
-#define MEM_OBJ_NAME "/sharedMemory"
+#include "shared_memory.h"
 
-typedef struct {
-    char buffer[MAX_CHARS];
-    int bufferSize;
-} SharedMemory;
+void printSharedData(SharedData *sharedData) {
+    printf("sharedData->buffer: %d\n", sharedData->buffer);
+    printf("sharedData->bufferSize: %d\n", sharedData->bufferSize);
+    printf("sharedData->writeIndex: %d\n", sharedData->writeIndex);
+    printf("sharedData->readIndex: %d\n", sharedData->readIndex);
+    printf("sharedData->clientBlocked: %d\n", sharedData->clientBlocked);
+    printf("sharedData->recBlocked: %d\n", sharedData->recBlocked);
+    printf("sharedData->charsTransferred: %d\n", sharedData->charsTransferred);
+    printf("sharedData->charsRemaining: %d\n", sharedData->charsRemaining);
+    printf("sharedData->memUsed: %d\n", sharedData->memUsed);
+    printf("sharedData->insertTimes: %p\n", sharedData->insertTimes);
+    printf("sharedData->clientUserTime: %d\n", sharedData->clientUserTime);
+    printf("sharedData->clientKernelTime: %d\n", sharedData->clientKernelTime);
+    printf("sharedData->recUserTime: %d\n", sharedData->recUserTime);
+    printf("sharedData->recKernelTime: %d\n", sharedData->recKernelTime);
 
-// Función para insertar un carácter en la memoria compartida de manera circular
-void insertCharacterCircular(char character, SharedMemory *sharedMemory) {
-    // Obtener el índice donde se insertará el próximo carácter
-    int index = sharedMemory->bufferSize % MAX_CHARS;
-
-    // Insertar el carácter en el buffer
-    sharedMemory->buffer[index] = character;
-
-    // Incrementar el tamaño del buffer
-    sharedMemory->bufferSize++;
-
-    // Mostrar el carácter, la hora y la posición donde se insertó
-    time_t currentTime;
-    time(&currentTime);
-    printf("Caracter '%c' insertado en la posición %d a las %s", character, index, ctime(&currentTime));
+    /*printf("Contenido del buffer: \n");
+        for (int i = 0; i < sharedData->bufferSize; i++) {
+            printf("\"%c\" en posicion: %d ", sharedData->buffer[i], i);
+            printf("insertado a las: %ld\n", sharedData->insertTimes[i]);
+        }*/
 }
 
-int main() {
-    // Leer el archivo de texto especificado por el usuario
-    char filename[100];
-    printf("Ingrese el nombre del archivo de texto: ");
-    scanf("%s", filename);
+int main(int argc, char *argv[]) 
+{   
+    // Check for specified file and mode same as interval
+    if (argc < 3 || argc > 4) {
+        printf("Uso: %s <archivo> <modo> [intervalo]s\n", argv[0]);
+        printf("Modo: 0 = Manual, 1 = Automático\n");
+        return -1;
+    }
 
-    FILE *file = fopen(filename, "r");
+    // Open semaphores that were already created
+    sem_t *sem_crt = sem_open(SEM_CREATOR_FNAME, 0);
+    if (sem_crt == SEM_FAILED) {
+        perror("sem_open/creator");
+        exit(EXIT_FAILURE);
+    }
+    sem_t *sem_clt = sem_open(SEM_CLIENT_FNAME, 0);
+    if (sem_clt == SEM_FAILED) {
+        perror("sem_open/client");
+        exit(EXIT_FAILURE);
+    }
+    sem_t *sem_rcstr = sem_open(SEM_RECONSTRUCTOR_FNAME, 0);
+    if (sem_rcstr == SEM_FAILED) {
+        perror("sem_open/reconstructor");
+        exit(EXIT_FAILURE);
+    }
+
+    // Connect to shared mem block
+    SharedData *sharedData = attach_memory_block(FILENAME, BLOCK_SIZE);
+    if (sharedData == NULL) {
+        printf("ERROR: no se pudo acceder al bloque\n");
+        return -1;
+    }
+
+    printSharedData(sharedData);
+
+    // Read the file
+    FILE *file = fopen(argv[1], "r");
     if (file == NULL) {
-        perror("Error al abrir el archivo");
-        exit(EXIT_FAILURE);
+        printf("Error opening file %s\n",argv[1]);
+        return -1;
     }
 
-    // Leer el contenido inicial del archivo
-    char initialContent[MAX_CHARS];
-    fgets(initialContent, MAX_CHARS, file);
-    printf("Contenido inicial del archivo: %s\n", initialContent);
+    int character;
+    for (; (character = fgetc(file)) != EOF;) {
+        sem_wait(sem_crt);
 
-    // Acceder a la memoria compartida creada por el proceso creador
-    int fd = shm_open(MEM_OBJ_NAME, O_RDWR, 0666);
-    if (fd == -1) {
-        perror("Error al abrir el objeto de memoria compartida");
-        exit(EXIT_FAILURE);
+        printf("Agregando caracter: %c\n", character);
+
+        //strncpy(sharedData->buffer[sharedData->writeIndex], character, sizeof(char));
+
+        //sharedData->buffer[sharedData->writeIndex] = character;
+        /*sharedData->insertTimes[sharedData->writeIndex] = time(NULL);
+        sharedData->charsTransferred++;
+        sharedData->charsRemaining++;
+        sharedData->writeIndex++;*/
+
+        sem_post(sem_clt);
+        sem_post(sem_rcstr);
     }
 
-    // Mapear la memoria compartida
-    SharedMemory *sharedMemory = (SharedMemory *)mmap(NULL, sizeof(SharedMemory), PROT_WRITE, MAP_SHARED, fd, 0);
-    if (sharedMemory == MAP_FAILED) {
-        perror("Error al mapear la memoria compartida");
-        exit(EXIT_FAILURE);
-    }
+    // Create For Loop Here That Reads File And Add
+    // Character By Character To The Circular Buffer
 
-    // Almacenar los caracteres del archivo de texto en la memoria compartida de manera circular
-    char character;
-    while ((character = fgetc(file)) != EOF) {
-        // Insertar el carácter en la memoria compartida de manera circular
-        insertCharacterCircular(character, sharedMemory);
-        // Mostrar los caracteres que se están introduciendo en la memoria compartida
-        printf("Contenido en la memoria compartida: %s\n", sharedMemory->buffer);
-    }
-
-    // Proporcionar un mecanismo para terminar el proceso de manera elegante
-    fclose(file);
-    munmap(sharedMemory, sizeof(SharedMemory));
-    close(fd);
+    // Destroy semaphores and detach from memory after finishing
+    sem_close(sem_crt);
+    sem_close(sem_clt);
+    sem_close(sem_rcstr);
+    detach_memory_block(sharedData);
 
     return 0;
 }

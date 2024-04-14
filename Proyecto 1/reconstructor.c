@@ -1,58 +1,57 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <string.h>
-#include <time.h>
 
-#define MAX_CHARS 100
-#define MEM_OBJ_NAME "/sharedMemory"
+#include "shared_memory.h"
 
-typedef struct {
-    char buffer[MAX_CHARS];
-    int bufferSize;
-} SharedMemory;
+int main(int argc, char *argv[])
+{
+    // Check for specified file and mode same as interval
+    if (argc < 2 || argc > 3) {
+        printf("Uso: %s <modo> [intervalo]s\n", argv[0]);
+        printf("Modo: 0 = Manual, 1 = Automático\n");
+        return -1;
+    }
 
-// Función para mostrar la reconstrucción del archivo
-void showReconstruction(char character, int position, time_t timestamp) {
-    printf("Carácter '%c' insertado en la posición %d a las %s", character, position, ctime(&timestamp));
-}
-
-int main() {
-    int fd;
-    SharedMemory *sharedMemory;
-    
-    // Abrir el objeto de memoria compartida en modo de solo lectura
-    fd = shm_open(MEM_OBJ_NAME, O_RDONLY, 0666);
-    if (fd == -1) {
-        perror("Error al abrir el objeto de memoria compartida");
+    // Open semaphores that were already created
+    sem_t *sem_crt = sem_open(SEM_CREATOR_FNAME, 0);
+    if (sem_crt == SEM_FAILED) {
+        perror("sem_open/creator");
         exit(EXIT_FAILURE);
     }
-    
-    // Mapear la memoria compartida
-    sharedMemory = (SharedMemory *)mmap(NULL, sizeof(SharedMemory), PROT_READ, MAP_SHARED, fd, 0);
-    if (sharedMemory == MAP_FAILED) {
-        perror("Error al mapear la memoria compartida");
+    sem_t *sem_clt = sem_open(SEM_CLIENT_FNAME, 0);
+    if (sem_clt == SEM_FAILED) {
+        perror("sem_open/client");
         exit(EXIT_FAILURE);
     }
-    
-    // Mostrar el proceso de reconstrucción del archivo
-    printf("Proceso de reconstrucción del archivo:\n");
-    while (1) {
-        // Leer los caracteres de la memoria compartida
-        for (int i = 0; i < sharedMemory->bufferSize; i++) {
-            // Mostrar la reconstrucción caracter por caracter
-            showReconstruction(sharedMemory->buffer[i], i, time(NULL));
-        }
-        // Esperar un tiempo antes de mostrar el siguiente paso de reconstrucción
-        sleep(1);
+    sem_t *sem_rcstr = sem_open(SEM_RECONSTRUCTOR_FNAME, 0);
+    if (sem_rcstr == SEM_FAILED) {
+        perror("sem_open/reconstructor");
+        exit(EXIT_FAILURE);
     }
+
+    // Connect to shared mem block
+    char *block = attach_memory_block(FILENAME, BLOCK_SIZE);
+    if (block == NULL) {
+        printf("ERROR: no se pudo acceder al bloque\n");
+        return -1;
+    }
+
+    SharedData *sharedData;
+
+    // Create For Loop Here That Reads Buffer And Add
+    // Character By Character To A File To Reconstruct
+    // Initial File
+    sem_wait(sem_clt);
+    printf("Reading: \"%c\"\n", sharedData->buffer[0]);
+    sem_post(sem_clt);
+    sem_post(sem_rcstr);
     
-    // Desvincular la memoria compartida y cerrar el descriptor de archivo
-    munmap(sharedMemory, sizeof(SharedMemory));
-    close(fd);
-    
+    // Destroy semaphores and detach from memory after finishing
+    sem_close(sem_crt);
+    sem_close(sem_clt);
+    sem_close(sem_rcstr);
+    detach_memory_block(block);
+
     return 0;
 }
