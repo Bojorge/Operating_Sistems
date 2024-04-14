@@ -1,20 +1,15 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -std=c99
-LDFLAGS = -lrt
+CC		= gcc
+CFLAGS	= -g
+OBJS	= shared_memory.o
+EXE		= cliente reconstructor creador destroy
 
-all: creador cliente reconstructor estadisticas
+all: $(OBJS) $(EXE)
 
-creador: creador.c
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+$(OBJS): shared_memory.c
+	$(CC) $(CFLAGS) -c shared_memory.c -o $(OBJS)
 
-cliente: cliente.c
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+$(EXE): %: %.c $(SHARED_OBJ)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@
 
-reconstructor: reconstructor.c
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
-
-estadisticas: estadisticas.c
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
-
-clean:
-	rm -f creador cliente reconstructor estadisticas
+clean: 
+	rm -f *.o *.$(OBJS) $(EXE)
