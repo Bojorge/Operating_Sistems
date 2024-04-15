@@ -11,6 +11,7 @@
 #include "shared_memory.h"
 
 
+
 // Función para inicializar el buffer circular
 void initializeCircularBuffer(int numChars, size_t sharedSize) {
     // Crea o abre el objeto de memoria compartida
@@ -34,8 +35,8 @@ void initializeCircularBuffer(int numChars, size_t sharedSize) {
     }
 
     // Inicializa la estructura SharedMemory
-    sharedMemory->bufferSize = sharedSize;
-    memset(sharedMemory->buffer, '\0', numChars); // Llena el buffer con caracteres nulos
+    sharedMemory->bufferSize = numChars;
+    memset(sharedMemory->buffer, '\0', sharedSize); // Llena el buffer con caracteres nulos
 
     // Visualiza el contenido de la memoria compartida
     printf("Visualización en tiempo real del contenido de la memoria compartida:\n");
@@ -73,6 +74,7 @@ void write_buf(char buf[], size_t size){
     //printf("%d \n", (int)sizeof(buf));
     close(fd);
 }
+
 
 
 // Función para obtener el bufferSize

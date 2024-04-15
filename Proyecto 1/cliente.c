@@ -13,6 +13,7 @@
 int main(void)
 {
     int bufferSize = getBufferSize();
+    size_t sharedSize = sizeof(char)*bufferSize;
 
     // Leer el archivo de texto especificado por el usuario
     char filename[20];
@@ -31,12 +32,9 @@ int main(void)
     printf("Contenido inicial del archivo: %s\n", buf);
 
 
+    printf("Tamaño del array buf: %zu bytes\n", sharedSize);
 
-    //size_t size = sizeof(buf); // Obtener el tamaño del array buf en bytes
-    size_t size = bufferSize; 
-    printf("Tamaño del array buf: %zu bytes\n", size);
-
-    write_buf(buf, size);
+    write_buf(buf, sharedSize);
    
    return 0;
 }
