@@ -5,11 +5,10 @@
 #define SHARED_MEMORY_H
 
 #define MEMORY_OBJECT_NAME "/sharedProcessMemory"
-#define MAX_CHARS 100
 
 typedef struct {
     //char *buffer;
-    char buffer[MAX_CHARS];
+    char buffer[100];
     int bufferSize;
     int writeIndex; // Head
     int readIndex;  // Tail

@@ -35,12 +35,13 @@ void initializeCircularBuffer(int numChars, size_t sharedSize) {
 
     // Inicializa la estructura SharedMemory
     sharedMemory->bufferSize = sharedSize;
-    memset(sharedMemory->buffer, '\0', MAX_CHARS); // Llena el buffer con caracteres nulos
+    memset(sharedMemory->buffer, '\0', numChars); // Llena el buffer con caracteres nulos
 
     // Visualiza el contenido de la memoria compartida
     printf("Visualización en tiempo real del contenido de la memoria compartida:\n");
     while (1) {
-        printf("Buffer: %s\n", sharedMemory->buffer);
+        printf("\r Contenido del buffer: %s", sharedMemory->buffer);
+        fflush(stdout);
         sleep(1); // Espera 1 segundo antes de volver a visualizar
     }
 
@@ -48,7 +49,6 @@ void initializeCircularBuffer(int numChars, size_t sharedSize) {
     munmap(sharedMemory, sharedSize);
     close(fd);
 }
-
 
 
 
