@@ -19,7 +19,9 @@ typedef struct {
 
 void initializeCircularBuffer(int numChars, size_t sharedSize);
      
-void write_buf(char buf[]);
+void write_buf(char buf[], size_t size);
+
+int getBufferSize();
 
 
 #endif
