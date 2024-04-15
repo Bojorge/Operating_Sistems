@@ -26,8 +26,8 @@ int main(void)
     }
 
     // Leer el contenido inicial del archivo
-    char buf[bufferSize];
-    fgets(buf, bufferSize, file);
+    char buf[bufferSize+1];
+    fgets(buf, bufferSize+1, file);
     printf("Contenido inicial del archivo: %s\n", buf);
 
 

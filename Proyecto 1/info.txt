@@ -1,0 +1,23 @@
+https://man7.org/linux/man-pages/man2/
+
+https://youtu.be/a8tR6d47bCc?si=NaY7pvdO45_8Xbrc
+
+https://youtu.be/3U9Likm9YHo?si=P433rO8Jw1VMMGha
+
+
+
+Directorio de memoria compartida:    cd /dev/shm/  
+
+
+Consultar los archivos compartidos:   ls -l
+
+
+Para borrar el espacio de memoria creado:   rm nombre_memoria_compartida
++ rm statsMemory
++ rm sharedMemory
++ rm sem.myreconstructor
++ rm sem.mycliente
++ rm sem.mycreador
+
+
+

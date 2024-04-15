@@ -1,23 +1,5 @@
-https://man7.org/linux/man-pages/man2/
-
-https://youtu.be/a8tR6d47bCc?si=NaY7pvdO45_8Xbrc
-
-https://youtu.be/3U9Likm9YHo?si=P433rO8Jw1VMMGha
-
-
-
-Directorio de memoria compartida:    cd /dev/shm/  
-
-
-Consultar los archivos compartidos:   ls -l
-
-
-Para borrar el espacio de memoria creado:   rm nombre_memoria_compartida
-+ rm statsMemory
-+ rm sharedMemory
-+ rm sem.myreconstructor
-+ rm sem.mycliente
-+ rm sem.mycreador
-
-
-
+Las ideas sobre la existencia de vida extraterrestre han ido evolucionando a lo largo de la Historia siguiendo tres caminos independientes: a) El estudio del origen de la vida en la Tierra, b) el conocimiento de la estructura del Universo y el papel que nuestro planeta juega en ella y c) La estructura de la materia a pequeña escala.
+En la ultima decada estas vías han ido confluyendo dando una vision unificada del problema. Sin embargo dos escuelas de pensamiento persisten. 
+Por un lado los partidarios del principio de plenitud, según el cual las condiciones que condujeron a la vida en la Tierra son una fase mas. incluso inevitable, en la evolucion quimica del Universo. For otra lado. y representados en gran parte por el principio antropico. las ideas que apoyan que la existencia del Hombre en la Tierra es suficiente para explicar el Universo. 
+Nuestro planeta parece presentar una serie de privilegios dificiles de reproducir en otros sistemas planetarios .Ademas los acontecimientos que dieron lugar a la vida fueron fundamentalmente de caracter catastrofico, tales como el origen de la Luna o el impacto de los cometas.
+Desde el punto de vista astronomico. tres son los retos que se plantean para el proximo siglo: a) detectar otros sistemas planetarios. b) determinar hasta que punto las condiciones que dieron lugar a la vida en la Tierra constituyen una excepcion y c) buscar y establecer contacto con otras civilizaciones.
