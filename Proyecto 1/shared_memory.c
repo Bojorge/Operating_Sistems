@@ -1,57 +1,78 @@
+// shared_memory.c
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <errno.h>
 
 #include "shared_memory.h"
 
-#define IPC_RESULT_ERROR (-1)
 
-static int get_shared_block(char *filename, int size) {
-    key_t key;
-    key = ftok(filename, 0);
-
-    if (key == IPC_RESULT_ERROR) {
-        return IPC_RESULT_ERROR;
+// Función para inicializar el buffer circular
+void initializeCircularBuffer(int numChars, size_t sharedSize) {
+    // Crea o abre el objeto de memoria compartida
+    int fd = shm_open(MEMORY_OBJECT_NAME, O_CREAT | O_RDWR, 0666);
+    if (fd == -1) {
+        perror("Error al crear/abrir el objeto de memoria compartida");
+        exit(EXIT_FAILURE);
     }
 
-    return shmget(key, size, 0644 | IPC_CREAT);
+    // Establece el tamaño del objeto de memoria compartida
+    if (ftruncate(fd, sharedSize) == -1) {
+        perror("Error al establecer el tamaño de la memoria compartida");
+        exit(EXIT_FAILURE);
+    }
+
+    // Mapea la memoria compartida a la estructura SharedMemory
+    SharedMemory *sharedMemory = (SharedMemory *)mmap(NULL, sharedSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (sharedMemory == MAP_FAILED) {
+        perror("Error al mapear la memoria compartida");
+        exit(EXIT_FAILURE);
+    }
+
+    // Inicializa la estructura SharedMemory
+    sharedMemory->bufferSize = sharedSize;
+    memset(sharedMemory->buffer, '\0', MAX_CHARS); // Llena el buffer con caracteres nulos
+
+    // Visualiza el contenido de la memoria compartida
+    printf("Visualización en tiempo real del contenido de la memoria compartida:\n");
+    while (1) {
+        printf("Buffer: %s\n", sharedMemory->buffer);
+        sleep(1); // Espera 1 segundo antes de volver a visualizar
+    }
+
+    // Desvincula y cierra la memoria compartida
+    munmap(sharedMemory, sharedSize);
+    close(fd);
 }
 
-SharedData * attach_memory_block(char *filename, int size) {
-    int shared_block_id = get_shared_block(filename, size);
 
-    if (shared_block_id == IPC_RESULT_ERROR) {
-        return NULL;
+
+
+void write_buf(char buf[]){
+    printf("%d \n", (int)sizeof(buf));
+    char *ptr;
+   
+    int fd = shm_open (MEMORY_OBJECT_NAME,  O_RDWR  , 00200); /* open s.m object*/
+    if(fd == -1)
+    {
+        printf("Error file descriptor %s\n", strerror(errno));
+        exit(1);
     }
-
-    SharedData *sharedData = shmat(shared_block_id, NULL, 0);
-    if (sharedData == IPC_RESULT_ERROR) {
-        return NULL;
-    }
-
-    return sharedData;
-}
-
-SharedData * init_mem_block(char *filename, int size, int numChars) {
-    int shared_block_id = get_shared_block(filename, size);
-    SharedData *sharedData = shmat(shared_block_id, NULL, 0);
     
-    return sharedData;
-}
-
-bool detach_memory_block(SharedData *block) {
-    return (shmdt(block) != -1);
-}
-
-bool destroy_memory_block(char *filename) {
-    int shared_block_id = get_shared_block(filename, 0);
-
-    if (shared_block_id == IPC_RESULT_ERROR) {
-        return NULL;
+    ptr = mmap(NULL, sizeof(buf), PROT_WRITE, MAP_SHARED, fd, 0);
+    if(ptr == MAP_FAILED)
+    {
+        printf("Map failed in write process: %s\n", strerror(errno));
+        exit(1);
     }
-
-    return (shmctl(shared_block_id, IPC_RMID, NULL) != IPC_RESULT_ERROR);
+    
+    memcpy(ptr,buf, sizeof(buf));
+    //printf("%d \n", (int)sizeof(buf));
+    close(fd);
+   
 }
+

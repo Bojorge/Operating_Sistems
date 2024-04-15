@@ -1,46 +1,27 @@
+// shared_memory.h
+
+
 #ifndef SHARED_MEMORY_H
 #define SHARED_MEMORY_H
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/shm.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <time.h>
-#include <semaphore.h>
-#include <fcntl.h>
+#define MEMORY_OBJECT_NAME "/sharedProcessMemory"
+#define MAX_CHARS 100
 
 typedef struct {
-    char *buffer;
+    //char *buffer;
+    char buffer[MAX_CHARS];
     int bufferSize;
-    int writeIndex, readIndex;
-    int clientBlocked, recBlocked;
-    int charsTransferred, charsRemaining;
-    int memUsed;
-    time_t *insertTimes;
-    int clientUserTime, clientKernelTime;
-    int recUserTime, recKernelTime;
-} SharedData;
+    int writeIndex; // Head
+    int readIndex;  // Tail
+    int memUsed;    // Count
+} SharedMemory;
 
-/*typedef struct {
-    char *buffer;
-    time_t *insertTimes;
-} BufferData;*/
 
-SharedData * init_mem_block(char *filename, int size, int numChars);
-SharedData * attach_memory_block(char *filename, int size);
-bool detach_memory_block(SharedData *sharedData);
-bool destroy_memory_block(char *filename);
+void initializeCircularBuffer(int numChars, size_t sharedSize);
+     
+void write_buf(char buf[]);
 
-#define FILENAME "creador.c"
-#define BLOCK_SIZE 73
-
-#define SEM_CREATOR_FNAME "/mycreador"
-#define SEM_CLIENT_FNAME "/mycliente"
-#define SEM_RECONSTRUCTOR_FNAME "/myreconstructor"
 
 #endif
+
+

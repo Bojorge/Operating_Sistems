@@ -1,15 +1,18 @@
-CC		= gcc
-CFLAGS	= -g
-OBJS	= shared_memory.o
-EXE		= cliente reconstructor creador destroy
+CC = gcc
+CFLAGS = -Wall -Wextra -pedantic -std=c99
+LDFLAGS = -lrt
+OBJS = shared_memory.o
+SRCS = creador.c cliente.c
+EXECUTABLES = creador cliente
 
-all: $(OBJS) $(EXE)
+all: $(EXECUTABLES)
 
-$(OBJS): shared_memory.c
-	$(CC) $(CFLAGS) -c shared_memory.c -o $(OBJS)
+creador: creador.c
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-$(EXE): %: %.c $(SHARED_OBJ)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@
+cliente: cliente.c
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-clean: 
-	rm -f *.o *.$(OBJS) $(EXE)
+
+clean:
+	rm -rf $(EXECUTABLES)

@@ -23,7 +23,9 @@ int main() {
     scanf("%d", &numChars);
 
     // Calcula el tamaño necesario para la memoria compartida
-    size_t sharedSize = sizeof(SharedMemory);
+    size_t sharedSize = sizeof(char)*numChars;
+
+    printf("Tamaño de la memoria compartida: %zu bytes\n", sharedSize);
 
     // Crea o abre el objeto de memoria compartida
     int fd = shm_open(MEM_OBJ_NAME, O_CREAT | O_RDWR, 0666);
