@@ -10,109 +10,53 @@
 
 #include "shared_memory.h"
 
-void initializeCircularBuffer(int numChars, size_t sharedSize) {
-    int fd = shm_open(MEMORY_OBJECT_NAME, O_CREAT | O_RDWR, 0666);
-    if (fd == -1) {
-        perror("Error al crear/abrir el objeto de memoria compartida");
+// Función para inicializar el buffer circular
+void initializeCircularBuffer(SharedMemory *sm, size_t size) {
+    sm->buffer = (char *)malloc(size * sizeof(char));
+    if (sm->buffer == NULL) {
+        fprintf(stderr, "Error: No se pudo asignar memoria para el buffer.\n");
         exit(EXIT_FAILURE);
     }
-
-    if (ftruncate(fd, sharedSize) == -1) {
-        perror("Error al establecer el tamaño de la memoria compartida");
-        exit(EXIT_FAILURE);
-    }
-
-    SharedMemory *sharedMemory = (SharedMemory *)mmap(NULL, sharedSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (sharedMemory == MAP_FAILED) {
-        perror("Error al mapear la memoria compartida");
-        exit(EXIT_FAILURE);
-    }
-
-    sharedMemory->bufferSize = numChars;
-    sharedMemory->writeIndex = 0;
-    sharedMemory->readIndex = 0;
-    sharedMemory->memUsed = 0;
-
-    // Asigna memoria para el buffer
-    sharedMemory->buffer = (char *)malloc(numChars * sizeof(char));
-    if (sharedMemory->buffer == NULL) {
-        perror("Error al asignar memoria para el buffer");
-        exit(EXIT_FAILURE);
-    }
-    memset(sharedMemory->buffer, '\0', numChars); // Llena el buffer con caracteres nulos
-
-    // Visualiza el contenido de la memoria compartida
-    printf("Visualización en tiempo real del contenido de la memoria compartida:\n");
-    while (1) {
-        printf("\r Contenido del buffer: %s", sharedMemory->buffer);
-        fflush(stdout);
-        sleep(1); // Espera 1 segundo antes de volver a visualizar
-    }
-    
-    munmap(sharedMemory, sharedSize);
-    close(fd);
+    sm->bufferSize = size;
+    sm->writeIndex = 0;
+    sm->readIndex = 0;
+    sm->memUsed = 0;
 }
 
-void write_buf(char buf[], size_t size) {
-    int fd = shm_open(MEMORY_OBJECT_NAME, O_RDWR, 0666);
-    if (fd == -1) {
-        perror("Error al abrir el objeto de memoria compartida");
-        exit(EXIT_FAILURE);
-    }
+// Función para destruir el buffer circular
+void destroyCircularBuffer(SharedMemory *sm) {
+    free(sm->buffer);
+}
 
-    SharedMemory *sharedMemory = (SharedMemory *)mmap(NULL, sizeof(SharedMemory), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (sharedMemory == MAP_FAILED) {
-        perror("Error al mapear la memoria compartida");
-        exit(EXIT_FAILURE);
+// Función para escribir un carácter en el buffer
+int writeChar(SharedMemory *sm, char c) {
+    if (sm->memUsed < sm->bufferSize) {
+        sm->buffer[sm->writeIndex] = c;
+        sm->writeIndex = (sm->writeIndex + 1) % sm->bufferSize;
+        sm->memUsed++;
+        return 1;
+    } else {
+        printf("\n \n  ***   El buffer se llenó   ***\n");
+        return 0;
     }
+}
 
-    // Inicializar buffer si no está inicializado
-    if (sharedMemory->buffer == NULL) {
-        sharedMemory->buffer = (char *)malloc(sharedMemory->bufferSize * sizeof(char));
-        if (sharedMemory->buffer == NULL) {
-            perror("Error al asignar memoria para el buffer");
-            munmap(sharedMemory, sizeof(SharedMemory));
-            close(fd);
-            exit(EXIT_FAILURE);
-        }
-        memset(sharedMemory->buffer, '\0', sharedMemory->bufferSize);
-    }
-
-    if (size > sharedMemory->bufferSize) {
-        printf("Error: Tamaño de escritura excede el tamaño del buffer.\n");
-        munmap(sharedMemory, sizeof(SharedMemory));
-        close(fd);
+// Función para mostrar el contenido del buffer
+void printBuffer(SharedMemory *sm) {
+    printf("Contenido del buffer: ");
+    if (sm->memUsed == 0) {
+        printf("El buffer está vacío.\n");
         return;
     }
-
-    int writeIndex = sharedMemory->writeIndex;
-    memcpy(sharedMemory->buffer + writeIndex, buf, size);
-
-    sharedMemory->writeIndex = (writeIndex + size) % sharedMemory->bufferSize;
-    sharedMemory->memUsed += size;
-
-    munmap(sharedMemory, sizeof(SharedMemory));
-    close(fd);
+    int i = sm->readIndex;
+    int count = 0;
+    while (count < sm->memUsed) {
+        printf("%c ", sm->buffer[i]);
+        //fflush(stdout);
+        i = (i + 1) % sm->bufferSize;
+        count++;
+    }
+    printf("\n");
 }
 
-size_t getBufferSize() {
-    int fd = shm_open(MEMORY_OBJECT_NAME, O_RDONLY, 0666);
-    if (fd == -1) {
-        perror("Error al abrir el objeto de memoria compartida");
-        exit(EXIT_FAILURE);
-    }
-
-    SharedMemory *sharedMemory = (SharedMemory *)mmap(NULL, sizeof(SharedMemory), PROT_READ, MAP_SHARED, fd, 0);
-    if (sharedMemory == MAP_FAILED) {
-        perror("Error al mapear la memoria compartida");
-        exit(EXIT_FAILURE);
-    }
-
-    size_t bufferSize = sharedMemory->bufferSize;
-
-    munmap(sharedMemory, sizeof(SharedMemory));
-    close(fd);
-
-    return bufferSize;
-}
 

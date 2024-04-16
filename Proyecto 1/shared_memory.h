@@ -8,20 +8,23 @@
 
 typedef struct {
     char *buffer;
-    //char buffer[100];
     size_t bufferSize;
     int writeIndex; // Head
     int readIndex;  // Tail
     int memUsed;    // Count
 } SharedMemory;
 
+// Función para inicializar el buffer circular
+void initializeCircularBuffer(SharedMemory *sm, size_t size);
 
-void initializeCircularBuffer(int numChars, size_t sharedSize);
-     
-void write_buf(char buf[], size_t size);
+// Función para destruir el buffer circular
+void destroyCircularBuffer(SharedMemory *sm);
 
-size_t getBufferSize();
+// Función para escribir un carácter en el buffer
+int writeChar(SharedMemory *sm, char c);
 
+// Función para mostrar el contenido del buffer
+void printBuffer(SharedMemory *sm);
 
 #endif
 
