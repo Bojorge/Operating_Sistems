@@ -1,3 +1,5 @@
+// cliente.c
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -12,7 +14,7 @@
 
 int main(void)
 {
-    int bufferSize = getBufferSize();
+    size_t bufferSize = getBufferSize();
     size_t sharedSize = sizeof(char)*bufferSize;
 
     // Leer el archivo de texto especificado por el usuario
@@ -38,3 +40,5 @@ int main(void)
    
    return 0;
 }
+
+
