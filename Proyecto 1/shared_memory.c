@@ -1,5 +1,8 @@
 // shared_memory.c
 
+
+
+#include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,9 +13,11 @@
 
 #include "shared_memory.h"
 
+
 // Función para inicializar el buffer circular
 void initializeCircularBuffer(SharedMemory *sm, size_t size) {
-    sm->buffer = (char *)malloc(size * sizeof(char));
+    sm->buffer = (char *)malloc(size);
+    
     if (sm->buffer == NULL) {
         fprintf(stderr, "Error: No se pudo asignar memoria para el buffer.\n");
         exit(EXIT_FAILURE);
@@ -21,6 +26,8 @@ void initializeCircularBuffer(SharedMemory *sm, size_t size) {
     sm->writeIndex = 0;
     sm->readIndex = 0;
     sm->memUsed = 0;
+    memset(sm->buffer, '\0', size); // Llena el buffer con caracteres nulos
+
 }
 
 // Función para destruir el buffer circular
@@ -43,20 +50,27 @@ int writeChar(SharedMemory *sm, char c) {
 
 // Función para mostrar el contenido del buffer
 void printBuffer(SharedMemory *sm) {
-    printf("Contenido del buffer: ");
+    
+    printf("\r >>> Contenido del buffer: %s\n", sm->buffer);
+    fflush(stdout);
+    /*
+    printf("  >>> Contenido del buffer: ");
     if (sm->memUsed == 0) {
         printf("El buffer está vacío.\n");
         return;
     }
+
     int i = sm->readIndex;
     int count = 0;
     while (count < sm->memUsed) {
         printf("%c ", sm->buffer[i]);
+
         //fflush(stdout);
         i = (i + 1) % sm->bufferSize;
         count++;
     }
     printf("\n");
+    */
 }
 
 

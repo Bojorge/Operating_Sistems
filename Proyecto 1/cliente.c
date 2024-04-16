@@ -1,44 +1,47 @@
-// cliente.c
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
-#include <sys/stat.h>        /* For mode constants */
-#include <fcntl.h>           /* For O_* constants */
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <errno.h>
 #include <string.h>
- 
-#include "shared_memory.c"
+#include <time.h>
+#include <linux/time.h>
 
-int main(void)
-{
-    size_t bufferSize = getBufferSize();
-    size_t sharedSize = sizeof(char)*bufferSize;
+#define MEMORY_OBJECT_NAME "/sharedMemory"
 
-    // Leer el archivo de texto especificado por el usuario
-    char filename[20];
-    printf("Ingrese el nombre del archivo de texto: ");
-    scanf("%s", filename);
-
-    FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        perror("Error al abrir el archivo");
+int main(void) {
+    int fd;
+    char input;
+    struct timespec current_time;
+    
+    fd = shm_open(MEMORY_OBJECT_NAME, O_RDWR, 0666);
+    if (fd == -1) {
+        perror("Error al abrir el objeto de memoria compartida");
         exit(EXIT_FAILURE);
     }
+    
+    char *ptr = mmap(NULL, sizeof(char), PROT_WRITE, MAP_SHARED, fd, 0);
+    if (ptr == MAP_FAILED) {
+        perror("Error al mapear la memoria compartida");
+        exit(EXIT_FAILURE);
+    }
+    
+    printf("Ingrese caracteres (ingrese '.' para salir):\n");
+    while (1) {
+        scanf("\n%c", &input);
+        if (input == '.') {
+            break;
+        }
+        clock_gettime(CLOCK_REALTIME, &current_time);
+        printf("Carácter insertado: %c, Hora: %ld:%ld\n", input, current_time.tv_sec, current_time.tv_nsec);
+        *ptr = input;
+        ptr++;
+    }
 
-    // Leer el contenido inicial del archivo
-    char buf[bufferSize+1];
-    fgets(buf, bufferSize+1, file);
-    printf("Contenido inicial del archivo: %s\n", buf);
-
-
-    printf("Tamaño del array buf: %zu bytes\n", sharedSize);
-
-    write_buf(buf, sharedSize);
+    munmap(ptr, sizeof(char));
+    close(fd);
    
-   return 0;
+    return 0;
 }
-
-

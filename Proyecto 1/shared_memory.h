@@ -9,9 +9,9 @@
 typedef struct {
     char *buffer;
     size_t bufferSize;
-    int writeIndex; // Head
-    int readIndex;  // Tail
-    int memUsed;    // Count
+    size_t writeIndex; // Head
+    size_t readIndex;  // Tail
+    size_t memUsed;    // Count
 } SharedMemory;
 
 // Función para inicializar el buffer circular

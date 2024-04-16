@@ -1,13 +1,13 @@
-/*
-   It writes to a previously created memory object "/myMemoryObj"
-   to be compiled with "-lrt"
-*/
+// cliente.c
+
+
+
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
-#include <sys/stat.h>        /* For mode constants */
-#include <fcntl.h>           /* For O_* constants */
+#include <sys/stat.h>       
+#include <fcntl.h>          
 #include <unistd.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -21,7 +21,7 @@ int main(void)
    char buf[] = "Hello,this is writting process";
    char *ptr;
    
-   fd = shm_open (SMOBJ_NAME,  O_RDWR  , 00200); /* open s.m object*/
+   fd = shm_open (SMOBJ_NAME,  O_RDWR  , 00200); /* open shared memory object*/
    if(fd == -1)
    {
        printf("Error file descriptor %s\n", strerror(errno));

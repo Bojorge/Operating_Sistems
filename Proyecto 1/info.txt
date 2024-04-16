@@ -20,3 +20,59 @@ Para borrar el espacio de memoria creado:   rm nombre_memoria_compartida
 + rm sem.mycreador
 
 
+
+
+
+
+
+
+
+
+
+
+
+    //size_t bufferSize = 12;
+    //size_t sharedSize = sizeof(char)*bufferSize;
+
+    /*
+    // Leer el archivo de texto especificado por el usuario
+    char filename[20];
+    printf("Ingrese el nombre del archivo de texto: ");
+    scanf("%s", filename);
+
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Error al abrir el archivo");
+        exit(EXIT_FAILURE);
+    }
+
+    // Leer el contenido inicial del archivo
+    char buf[bufferSize+1];
+    fgets(buf, bufferSize+1, file);
+    printf("Texto obtenido del archivo: %s\n", buf);
+    
+
+
+
+
+
+
+
+    // Bucle principal para ingresar caracteres
+    char input;
+    printf("Ingrese caracteres (ingrese '.' para salir):\n");
+    while (1) {
+        scanf("\n %c", &input);
+        if (input == '.') {
+            break;
+        }
+        if (!writeChar(sharedMemory, input)) {
+            break; // Salir si el buffer está lleno
+        }
+        
+        //memcpy(sharedMemory,input, 1);
+        printf("\n Caracter ingresado: %c", input);
+    }
+
+    close(fd);
+    */
