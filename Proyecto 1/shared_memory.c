@@ -47,8 +47,18 @@ Sentence * attach_buffer(char *buffer_location, int size) {
 
 // c | time: Apr 19 2024 19:00:00
 void init_mem_block(char *struct_location, char *buffer_location, int sizeStruct, int sizeBuffer) {
-    get_shared_block(struct_location, sizeStruct);
-    get_shared_block(buffer_location, sizeBuffer);
+    int struct_block_id = get_shared_block(struct_location, sizeStruct);
+    int buffer_block_id = get_shared_block(buffer_location, sizeBuffer);
+
+    if (struct_block_id == IPC_RESULT_ERROR) {
+        printf("Error al obtener identificador del bloque compartido struct.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (buffer_block_id == IPC_RESULT_ERROR) {
+        printf("Error al obtener identificador del bloque compartido buffer.\n");
+        exit(EXIT_FAILURE);
+    }
 }
 
 

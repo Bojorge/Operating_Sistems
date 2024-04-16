@@ -20,8 +20,7 @@ void init_empty_struct (SharedData *sharedData, int numChars) {
 }
 
 void printSharedData(SharedData *sharedData) {
-    /*printf("sharedData->buffer: %p\n", sharedData->buffer);
-    printf("sharedData->bufferSize: %d\n", sharedData->bufferSize);
+    /*printf("sharedData->bufferSize: %d\n", sharedData->bufferSize);
     printf("sharedData->writeIndex: %d\n", sharedData->writeIndex);
     printf("sharedData->readIndex: %d\n", sharedData->readIndex);
     printf("sharedData->clientBlocked: %d\n", sharedData->clientBlocked);
@@ -29,20 +28,17 @@ void printSharedData(SharedData *sharedData) {
     printf("sharedData->charsTransferred: %d\n", sharedData->charsTransferred);
     printf("sharedData->charsRemaining: %d\n", sharedData->charsRemaining);
     printf("sharedData->memUsed: %d\n", sharedData->memUsed);
-    printf("sharedData->insertTimes: %p\n", sharedData->insertTimes);
     printf("sharedData->clientUserTime: %d\n", sharedData->clientUserTime);
     printf("sharedData->clientKernelTime: %d\n", sharedData->clientKernelTime);
     printf("sharedData->recUserTime: %d\n", sharedData->recUserTime);
     printf("sharedData->recKernelTime: %d\n", sharedData->recKernelTime);*/
-
-    printf("Contenido del buffer: \n");
-        for (int i = 0; i < sharedData->bufferSize; i++) {
-            break;
-        }
 }
 
 int main(int argc, char *argv[]) 
 {
+    destroy_memory_block(STRUCT_LOCATION);
+    destroy_memory_block(BUFFER_LOCATION);
+    
     int numChars;
     printf("Ingrese la cantidad de caracteres a compartir: ");
     scanf("%d", &numChars);
@@ -68,56 +64,52 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    for (int i = 0; i < numChars; i++) {
+        sem_unlink(SEM_VARIABLE_FNAME );
+    }
+
     // Initialize shared mem blocks
     init_mem_block(STRUCT_LOCATION, BUFFER_LOCATION, sizeof(SharedData), numChars * sizeof(Sentence));
 
     // Attach to struct shared mem block
     SharedData *sharedStruct = attach_struct(STRUCT_LOCATION, sizeof(SharedData));
+    if (sharedStruct == NULL) {
+        printf("Error al adjuntar al bloque de memoria compartida.\n");
+        exit(EXIT_FAILURE);
+    }
 
     // Attach to buffer mem block
     Sentence *buffer = attach_buffer(BUFFER_LOCATION, numChars * sizeof(Sentence));
-
-    for (int i = 0; i < numChars; i++) {
-        printf("buffer[%d] = %c | time: %s\n", i, buffer[i].character, buffer[i].time);
+    if (buffer == NULL) {
+        printf("Error al adjuntar al bloque de memoria compartida.\n");
+        exit(EXIT_FAILURE);
     }
-    
+
     // Initialize empty struct for the shared mem block
     init_empty_struct(sharedStruct, numChars);
 
-
-    detach_struct(sharedStruct);
-    detach_buffer(buffer);
-
     // Start visualization of mem block
-    /*while(true) {
-        SharedData *sharedData2 = attach_memory_block(FILENAME, sharedSize);
-        if (sharedData2 == NULL) {
-            printf("ERROR: no se pudo crear el bloque\n");
-            return -1;
+    while(true) {
+        sem_wait(sem_clt);
+        
+        for (int i = 0; i < numChars; i++) {
+            printf("buffer[%d] = \"%c\" | time: %s\n", i, buffer[i].character, buffer[i].time);
         }
 
-        sem_wait(sem_clt);
-            /*for (int i = 0; i < sharedData->bufferSize; i++) {
-                printf("\"%c\" en posicion: %d ", sharedData->buffer[i], i);
-                printf("insertado a las: %ld\n", sharedData->insertTimes[i]);
-            }*/
-            /*if (strlen(sharedData) > 0) {
-                printf("Reading: \"%s\"\n", sharedData);
-                bool done = (strcmp(sharedData, "quit") == 0);
-                sharedData[0] = 0;
-                if (done) {break;}
-            }
-            printSharedData(sharedData2);
+        printf("--------------------------------------\n");
 
         sem_post(sem_crt);
         sem_post(sem_rcstr);
-        detach_memory_block(sharedData2);
-    }*/
+    }
+
+    detach_struct(sharedStruct);
+    detach_buffer(buffer);
 
     // Destroy the shared mem block and semaphores
     sem_close(sem_crt);
     sem_close(sem_clt);
     sem_close(sem_rcstr);
+
     destroy_memory_block(STRUCT_LOCATION);
     destroy_memory_block(BUFFER_LOCATION);
 

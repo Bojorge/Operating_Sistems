@@ -45,10 +45,11 @@ bool destroy_memory_block(char *filename);
 
 // Variables
 #define STRUCT_LOCATION "creador.c"
-#define BUFFER_LOCATION "buffer"
+#define BUFFER_LOCATION "destroy.c"
 
 #define SEM_CREATOR_FNAME "/mycreador"
 #define SEM_CLIENT_FNAME "/mycliente"
 #define SEM_RECONSTRUCTOR_FNAME "/myreconstructor"
+#define SEM_VARIABLE_FNAME "/mybuffervariable"
 
 #endif
