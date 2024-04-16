@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 
     // Start visualization of mem block
     while(true) {
-        sem_wait(sem_clt);
+        sem_wait(sem_crt);
         
         for (int i = 0; i < numChars; i++) {
             printf("buffer[%d] = \"%c\" | time: %s\n", i, buffer[i].character, buffer[i].time);
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 
         printf("--------------------------------------\n");
 
-        sem_post(sem_crt);
+        sem_post(sem_clt);
         sem_post(sem_rcstr);
     }
 

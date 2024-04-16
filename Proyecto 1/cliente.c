@@ -9,7 +9,7 @@ void insert_manually(FILE *file, sem_t *sem_crt, sem_t *sem_clt, sem_t *sem_rcst
     while ((character = fgetc(file)) != EOF) {
         getchar(); // Esperar hasta que se presione Enter
 
-        sem_wait(sem_crt);
+        sem_wait(sem_clt);
 
         // Get semaphore for said writing space, to check if writing is available
         char sem_write_name[MAX_LENGTH];
@@ -53,7 +53,7 @@ void insert_manually(FILE *file, sem_t *sem_crt, sem_t *sem_clt, sem_t *sem_rcst
         sem_post(sem_var_read);
 
         // Post all semaphores so that other processes take control of shared mem    
-        sem_post(sem_clt);
+        sem_post(sem_crt);
         sem_post(sem_rcstr);
     }
     sharedData->writingFinished = true;
@@ -62,7 +62,7 @@ void insert_manually(FILE *file, sem_t *sem_crt, sem_t *sem_clt, sem_t *sem_rcst
 void insert_automatically(FILE *file, int interval, sem_t *sem_crt, sem_t *sem_clt, sem_t *sem_rcstr, SharedData *sharedData, Sentence *buffer) {
     char character;
     while ((character = fgetc(file)) != EOF) {
-        sem_wait(sem_crt);
+        sem_wait(sem_clt);
 
         // Get semaphore for said writing space, to check if writing is available
         char sem_write_name[MAX_LENGTH];
@@ -107,7 +107,7 @@ void insert_automatically(FILE *file, int interval, sem_t *sem_crt, sem_t *sem_c
         sem_post(sem_var_read);
 
         // Post all semaphores so that other processes take control of shared mem    
-        sem_post(sem_clt);
+        sem_post(sem_crt);
         sem_post(sem_rcstr);
 
         sleep(interval); // Esperar el intervalo especificado
@@ -182,11 +182,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // Destroy semaphores and detach from memory after finishing
-    sem_close(sem_crt);
-    sem_close(sem_clt);
-    sem_close(sem_rcstr);
-
+    // Detach from memory after finishing
     detach_struct(sharedData);
     detach_buffer(buffer);
     return 0;
