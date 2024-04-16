@@ -1,15 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-// Estructura para el buffer circular
-typedef struct {
-    char *buffer;
-    size_t bufferSize;
-    int writeIndex; // Head
-    int readIndex;  // Tail
-    int memUsed;    // Count
-} CircularBuffer;
+#include "circular_buffer.h"
 
 // Función para inicializar el buffer circular
 void initializeCircularBuffer(CircularBuffer *cb, size_t size) {
@@ -86,5 +75,3 @@ int main() {
     
     return 0;
 }
-
-
