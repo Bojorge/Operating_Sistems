@@ -4,29 +4,6 @@
 
 #include "shared_memory.h"
 
-void printSharedData(SharedData *sharedData) {
-    printf("sharedData->buffer: %d\n", sharedData->buffer);
-    printf("sharedData->bufferSize: %d\n", sharedData->bufferSize);
-    printf("sharedData->writeIndex: %d\n", sharedData->writeIndex);
-    printf("sharedData->readIndex: %d\n", sharedData->readIndex);
-    printf("sharedData->clientBlocked: %d\n", sharedData->clientBlocked);
-    printf("sharedData->recBlocked: %d\n", sharedData->recBlocked);
-    printf("sharedData->charsTransferred: %d\n", sharedData->charsTransferred);
-    printf("sharedData->charsRemaining: %d\n", sharedData->charsRemaining);
-    printf("sharedData->memUsed: %d\n", sharedData->memUsed);
-    printf("sharedData->insertTimes: %p\n", sharedData->insertTimes);
-    printf("sharedData->clientUserTime: %d\n", sharedData->clientUserTime);
-    printf("sharedData->clientKernelTime: %d\n", sharedData->clientKernelTime);
-    printf("sharedData->recUserTime: %d\n", sharedData->recUserTime);
-    printf("sharedData->recKernelTime: %d\n", sharedData->recKernelTime);
-
-    /*printf("Contenido del buffer: \n");
-        for (int i = 0; i < sharedData->bufferSize; i++) {
-            printf("\"%c\" en posicion: %d ", sharedData->buffer[i], i);
-            printf("insertado a las: %ld\n", sharedData->insertTimes[i]);
-        }*/
-}
-
 int main(int argc, char *argv[]) 
 {   
     // Check for specified file and mode same as interval
@@ -60,8 +37,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    printSharedData(sharedData);
-
     // Read the file
     FILE *file = fopen(argv[1], "r");
     if (file == NULL) {
@@ -69,26 +44,43 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    int character;
+    printf("sharedData->bufferSize: %d\n", sharedData->bufferSize);
+
+    char* temp_buffer[sharedData->bufferSize];
+    char* temp_times[sharedData->bufferSize * 24];
+
+    /*memcpy(temp_buffer, sharedData->buffer, (sharedData->bufferSize * sizeof(char)));
+    memcpy(temp_times, sharedData->insertTimes, (sharedData->bufferSize * sizeof(time_t)));
+    printf("temp_buffer[0]: %s", temp_buffer[0]);
+    printf("temp_times[0]: %ln", temp_times[0]);*/
+
+    char character;
     for (; (character = fgetc(file)) != EOF;) {
         sem_wait(sem_crt);
 
         printf("Agregando caracter: %c\n", character);
 
-        //strncpy(sharedData->buffer[sharedData->writeIndex], character, sizeof(char));
+        time_t current_time;
+        time(&current_time);
 
-        //sharedData->buffer[sharedData->writeIndex] = character;
-        /*sharedData->insertTimes[sharedData->writeIndex] = time(NULL);
+        temp_buffer[sharedData->writeIndex] = &character;
+        temp_times[sharedData->writeIndex] = ctime(&current_time);
+
         sharedData->charsTransferred++;
         sharedData->charsRemaining++;
-        sharedData->writeIndex++;*/
+        sharedData->writeIndex++;
 
         sem_post(sem_clt);
         sem_post(sem_rcstr);
     }
 
-    // Create For Loop Here That Reads File And Add
-    // Character By Character To The Circular Buffer
+    for (int i = 0; i < sharedData->bufferSize; ++i) {
+        printf("buffer: %s\n", temp_buffer[i]);
+        printf("times: %s\n", temp_times[i]);
+    }
+
+    sharedData->buffer = temp_buffer;
+    sharedData->insertTimes = temp_times;
 
     // Destroy semaphores and detach from memory after finishing
     sem_close(sem_crt);

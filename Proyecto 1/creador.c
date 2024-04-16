@@ -5,9 +5,6 @@
 #include "shared_memory.h"
 
 void init_empty_struct (SharedData *sharedData, int numChars) {
-    char *emptyCharArray = (char *)calloc(numChars, sizeof(char));
-    time_t *emptyTimeArray = (time_t *)calloc(numChars, sizeof(time_t));
-    sharedData->buffer = emptyCharArray;
     sharedData->bufferSize = numChars;
     sharedData->writeIndex = 0;
     sharedData->readIndex = 0;
@@ -15,12 +12,11 @@ void init_empty_struct (SharedData *sharedData, int numChars) {
     sharedData->recBlocked = 0;
     sharedData->charsTransferred = 0;
     sharedData->charsRemaining = 0;
-    sharedData->insertTimes = emptyTimeArray;
     sharedData->clientUserTime = 0;
     sharedData->clientKernelTime = 0;
     sharedData->recUserTime = 0;
     sharedData->recKernelTime = 0;
-    sharedData->memUsed = sizeof(sharedData);
+    sharedData->memUsed = sizeof(SharedData) + (sizeof(Sentence) * numChars);
 }
 
 void printSharedData(SharedData *sharedData) {
@@ -41,8 +37,7 @@ void printSharedData(SharedData *sharedData) {
 
     printf("Contenido del buffer: \n");
         for (int i = 0; i < sharedData->bufferSize; i++) {
-            printf("\"%c\" en posicion: %d ", sharedData->buffer[i], i);
-            printf("insertado a las: %ld\n", sharedData->insertTimes[i]);
+            break;
         }
 }
 
@@ -73,24 +68,30 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    // Initialize shared mem block
-    int sharedSize = sizeof(SharedData) + numChars * sizeof(char) + numChars * sizeof(time_t);
-    printf("Tamano sharedSize: %d\n", sharedSize);
+    // Initialize shared mem blocks
+    init_mem_block(STRUCT_LOCATION, BUFFER_LOCATION, sizeof(SharedData), numChars * sizeof(Sentence));
 
-    SharedData *sharedData = init_mem_block(FILENAME, sharedSize, numChars);
-    if (sharedData == NULL) {
-        printf("ERROR: no se pudo crear el bloque\n");
-        return -1;
+    // Attach to struct shared mem block
+    SharedData *sharedStruct = attach_struct(STRUCT_LOCATION, sizeof(SharedData));
+
+    // Attach to buffer mem block
+    Sentence *buffer = attach_buffer(BUFFER_LOCATION, numChars * sizeof(Sentence));
+
+    for (int i = 0; i < numChars; i++) {
+        printf("buffer[%d] = %c | time: %s\n", i, buffer[i].character, buffer[i].time);
     }
+    
+    // Initialize empty struct for the shared mem block
+    init_empty_struct(sharedStruct, numChars);
 
-    // Structure the shared mem block
-    init_empty_struct(sharedData, numChars);
-    detach_memory_block(sharedData);
+
+    detach_struct(sharedStruct);
+    detach_buffer(buffer);
 
     // Start visualization of mem block
-    while(true) {
-        SharedData *sharedData = attach_memory_block(FILENAME, sharedSize);
-        if (sharedData == NULL) {
+    /*while(true) {
+        SharedData *sharedData2 = attach_memory_block(FILENAME, sharedSize);
+        if (sharedData2 == NULL) {
             printf("ERROR: no se pudo crear el bloque\n");
             return -1;
         }
@@ -105,19 +106,20 @@ int main(int argc, char *argv[])
                 bool done = (strcmp(sharedData, "quit") == 0);
                 sharedData[0] = 0;
                 if (done) {break;}
-            }*/
-            printSharedData(sharedData);
+            }
+            printSharedData(sharedData2);
 
         sem_post(sem_crt);
         sem_post(sem_rcstr);
-        detach_memory_block(sharedData);
-    }
+        detach_memory_block(sharedData2);
+    }*/
 
     // Destroy the shared mem block and semaphores
     sem_close(sem_crt);
     sem_close(sem_clt);
     sem_close(sem_rcstr);
-    destroy_memory_block(FILENAME);
+    destroy_memory_block(STRUCT_LOCATION);
+    destroy_memory_block(BUFFER_LOCATION);
 
     return 0;
 }

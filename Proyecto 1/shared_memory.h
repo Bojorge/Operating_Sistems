@@ -14,30 +14,38 @@
 #include <semaphore.h>
 #include <fcntl.h>
 
+// Structs
 typedef struct {
-    char *buffer;
     int bufferSize;
     int writeIndex, readIndex;
     int clientBlocked, recBlocked;
     int charsTransferred, charsRemaining;
     int memUsed;
-    time_t *insertTimes;
     int clientUserTime, clientKernelTime;
     int recUserTime, recKernelTime;
 } SharedData;
 
-/*typedef struct {
-    char *buffer;
-    time_t *insertTimes;
-} BufferData;*/
+#define MAX_TIME_LENGTH 21
 
-SharedData * init_mem_block(char *filename, int size, int numChars);
-SharedData * attach_memory_block(char *filename, int size);
-bool detach_memory_block(SharedData *sharedData);
+typedef struct {
+    char character;
+    char time[MAX_TIME_LENGTH];
+} Sentence;
+
+// Funciones
+void init_mem_block(char *struct_location, char *buffer_location, int sizeStruct, int sizeBuffer);
+
+SharedData * attach_struct(char *struct_location, int size);
+Sentence * attach_buffer(char *buffer_location, int size);
+
+bool detach_struct(SharedData *sharedStruct);
+bool detach_buffer(Sentence *buffer);
+
 bool destroy_memory_block(char *filename);
 
-#define FILENAME "creador.c"
-#define BLOCK_SIZE 73
+// Variables
+#define STRUCT_LOCATION "creador.c"
+#define BUFFER_LOCATION "buffer"
 
 #define SEM_CREATOR_FNAME "/mycreador"
 #define SEM_CLIENT_FNAME "/mycliente"

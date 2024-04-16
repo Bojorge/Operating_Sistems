@@ -1,7 +1,7 @@
 CC		= gcc
 CFLAGS	= -g
 OBJS	= shared_memory.o
-EXE		= cliente reconstructor creador destroy
+EXE		= creador
 
 all: $(OBJS) $(EXE)
 

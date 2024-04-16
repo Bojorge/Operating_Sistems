@@ -9,9 +9,9 @@
 
 #define IPC_RESULT_ERROR (-1)
 
-static int get_shared_block(char *filename, int size) {
+static int get_shared_block(char *location, int size) {
     key_t key;
-    key = ftok(filename, 0);
+    key = ftok(location, 0);
 
     if (key == IPC_RESULT_ERROR) {
         return IPC_RESULT_ERROR;
@@ -20,34 +20,49 @@ static int get_shared_block(char *filename, int size) {
     return shmget(key, size, 0644 | IPC_CREAT);
 }
 
-SharedData * attach_memory_block(char *filename, int size) {
-    int shared_block_id = get_shared_block(filename, size);
+
+SharedData * attach_struct(char *struct_location, int size) {
+    int shared_block_id = get_shared_block(struct_location, size);
 
     if (shared_block_id == IPC_RESULT_ERROR) {
         return NULL;
     }
 
     SharedData *sharedData = shmat(shared_block_id, NULL, 0);
-    if (sharedData == IPC_RESULT_ERROR) {
+
+    return sharedData;
+}
+
+Sentence * attach_buffer(char *buffer_location, int size) {
+    int shared_block_id = get_shared_block(buffer_location, size);
+
+    if (shared_block_id == IPC_RESULT_ERROR) {
         return NULL;
     }
 
+    Sentence *sharedData = shmat(shared_block_id, NULL, 0);
+
     return sharedData;
 }
 
-SharedData * init_mem_block(char *filename, int size, int numChars) {
-    int shared_block_id = get_shared_block(filename, size);
-    SharedData *sharedData = shmat(shared_block_id, NULL, 0);
-    
-    return sharedData;
+// c | time: Apr 19 2024 19:00:00
+void init_mem_block(char *struct_location, char *buffer_location, int sizeStruct, int sizeBuffer) {
+    get_shared_block(struct_location, sizeStruct);
+    get_shared_block(buffer_location, sizeBuffer);
 }
 
-bool detach_memory_block(SharedData *block) {
+
+bool detach_struct(SharedData *block) {
     return (shmdt(block) != -1);
 }
 
-bool destroy_memory_block(char *filename) {
-    int shared_block_id = get_shared_block(filename, 0);
+bool detach_buffer(Sentence *buffer) {
+    return (shmdt(buffer) != -1);
+}
+
+
+bool destroy_memory_block(char *location) {
+    int shared_block_id = get_shared_block(location, 0);
 
     if (shared_block_id == IPC_RESULT_ERROR) {
         return NULL;
