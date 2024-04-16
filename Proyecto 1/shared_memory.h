@@ -23,6 +23,7 @@ typedef struct {
     int memUsed;
     int clientUserTime, clientKernelTime;
     int recUserTime, recKernelTime;
+    bool writingFinished, readingFinished;
 } SharedData;
 
 #define MAX_TIME_LENGTH 21
@@ -50,6 +51,9 @@ bool destroy_memory_block(char *filename);
 #define SEM_CREATOR_FNAME "/mycreador"
 #define SEM_CLIENT_FNAME "/mycliente"
 #define SEM_RECONSTRUCTOR_FNAME "/myreconstructor"
-#define SEM_VARIABLE_FNAME "/mybuffervariable"
+#define SEM_READ_VARIABLE_FNAME "/mybufferreadvariable"
+#define SEM_WRITE_VARIABLE_FNAME "/mybufferwritevariable"
+
+#define MAX_LENGTH 100
 
 #endif

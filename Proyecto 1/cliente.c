@@ -11,6 +11,29 @@ void insert_manually(FILE *file, sem_t *sem_crt, sem_t *sem_clt, sem_t *sem_rcst
 
         sem_wait(sem_crt);
 
+        // Get semaphore for said writing space, to check if writing is available
+        char sem_write_name[MAX_LENGTH];
+        sprintf(sem_write_name, "%s%d", SEM_WRITE_VARIABLE_FNAME, sharedData->writeIndex);
+
+        sem_t *sem_var_write = sem_open(sem_write_name, 0);
+        if (sem_var_write == SEM_FAILED) {
+            perror("sem_open/variables");
+            exit(EXIT_FAILURE);
+        }
+
+        // Get semaphore for said reading space, to post after writing
+        char sem_read_name[MAX_LENGTH];
+        sprintf(sem_read_name, "%s%d", SEM_READ_VARIABLE_FNAME, sharedData->writeIndex);
+
+        sem_t *sem_var_read = sem_open(sem_read_name, 0);
+        if (sem_var_read == SEM_FAILED) {
+            perror("sem_open/variables");
+            exit(EXIT_FAILURE);
+        }
+
+        // Write after checking if semaphore is open
+        sem_wait(sem_var_write);
+
         // Obtener la marca de tiempo actual en el formato deseado
         time_t current_time;
         struct tm *timeinfo;
@@ -23,13 +46,17 @@ void insert_manually(FILE *file, sem_t *sem_crt, sem_t *sem_clt, sem_t *sem_rcst
         buffer[sharedData->writeIndex].character = character;
 
         // Actualizar los índices compartidos
-        sharedData->charsTransferred++;
         sharedData->charsRemaining--;
         sharedData->writeIndex = (sharedData->writeIndex + 1) % sharedData->bufferSize;
 
+        // Post so that variable could be read
+        sem_post(sem_var_read);
+
+        // Post all semaphores so that other processes take control of shared mem    
         sem_post(sem_clt);
         sem_post(sem_rcstr);
     }
+    sharedData->writingFinished = true;
 }
 
 void insert_automatically(FILE *file, int interval, sem_t *sem_crt, sem_t *sem_clt, sem_t *sem_rcstr, SharedData *sharedData, Sentence *buffer) {
@@ -37,6 +64,29 @@ void insert_automatically(FILE *file, int interval, sem_t *sem_crt, sem_t *sem_c
     while ((character = fgetc(file)) != EOF) {
         sem_wait(sem_crt);
 
+        // Get semaphore for said writing space, to check if writing is available
+        char sem_write_name[MAX_LENGTH];
+        sprintf(sem_write_name, "%s%d", SEM_WRITE_VARIABLE_FNAME, sharedData->writeIndex);
+
+        sem_t *sem_var_write = sem_open(sem_write_name, 0);
+        if (sem_var_write == SEM_FAILED) {
+            perror("sem_open/variables");
+            exit(EXIT_FAILURE);
+        }
+
+        // Get semaphore for said reading space, to post after writing
+        char sem_read_name[MAX_LENGTH];
+        sprintf(sem_read_name, "%s%d", SEM_READ_VARIABLE_FNAME, sharedData->writeIndex);
+
+        sem_t *sem_var_read = sem_open(sem_read_name, 0);
+        if (sem_var_read == SEM_FAILED) {
+            perror("sem_open/variables");
+            exit(EXIT_FAILURE);
+        }
+
+        // Write after checking if semaphore is open
+        sem_wait(sem_var_write);
+
         // Obtener la marca de tiempo actual en el formato deseado
         time_t current_time;
         struct tm *timeinfo;
@@ -53,11 +103,16 @@ void insert_automatically(FILE *file, int interval, sem_t *sem_crt, sem_t *sem_c
         sharedData->charsRemaining--;
         sharedData->writeIndex = (sharedData->writeIndex + 1) % sharedData->bufferSize;
 
+        // Post so that variable could be read
+        sem_post(sem_var_read);
+
+        // Post all semaphores so that other processes take control of shared mem    
         sem_post(sem_clt);
         sem_post(sem_rcstr);
 
         sleep(interval); // Esperar el intervalo especificado
     }
+    sharedData->writingFinished = true;
 }
 
 int main(int argc, char *argv[]) 

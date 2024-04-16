@@ -17,6 +17,7 @@ void init_empty_struct (SharedData *sharedData, int numChars) {
     sharedData->recUserTime = 0;
     sharedData->recKernelTime = 0;
     sharedData->memUsed = sizeof(SharedData) + (sizeof(Sentence) * numChars);
+    sharedData->writingFinished = false;
 }
 
 void printSharedData(SharedData *sharedData) {
@@ -65,7 +66,29 @@ int main(int argc, char *argv[])
     }
 
     for (int i = 0; i < numChars; i++) {
-        sem_unlink(SEM_VARIABLE_FNAME );
+        // Make every semaphore name for each buffer space
+        char sem_write_name[MAX_LENGTH];
+        sprintf(sem_write_name, "%s%d", SEM_WRITE_VARIABLE_FNAME, i);
+
+        char sem_read_name[MAX_LENGTH];
+        sprintf(sem_read_name, "%s%d", SEM_READ_VARIABLE_FNAME, i);
+
+        // Unlink them to prevent
+        sem_unlink(sem_write_name);
+        sem_unlink(sem_read_name);
+
+        // Init each semaphore
+        sem_t *sem_temp_write = sem_open(sem_write_name, O_CREAT, 0644, 1);
+        if (sem_temp_write == SEM_FAILED) {
+            perror("sem_open/variables");
+            exit(EXIT_FAILURE);
+        }
+
+        sem_t *sem_temp_read = sem_open(sem_read_name, O_CREAT, 0644, 0);
+        if (sem_temp_read == SEM_FAILED) {
+            perror("sem_open/variables");
+            exit(EXIT_FAILURE);
+        }
     }
 
     // Initialize shared mem blocks
