@@ -8,6 +8,7 @@ void init_empty_struct (SharedData *sharedData, int numChars) {
     sharedData->bufferSize = numChars;
     sharedData->writeIndex = 0;
     sharedData->readIndex = 0;
+    sharedData->readingFileIndex = 0;
     sharedData->clientBlocked = 0;
     sharedData->recBlocked = 0;
     sharedData->charsTransferred = 0;
@@ -18,6 +19,8 @@ void init_empty_struct (SharedData *sharedData, int numChars) {
     sharedData->recKernelTime = 0;
     sharedData->memUsed = sizeof(SharedData) + (sizeof(Sentence) * numChars);
     sharedData->writingFinished = false;
+    sharedData->readingFinished = false;
+    sharedData->statsInited = false;
 }
 
 void printSharedData(SharedData *sharedData) {
@@ -45,23 +48,17 @@ int main(int argc, char *argv[])
     scanf("%d", &numChars);
 
     // Set the semaphores
-    sem_unlink(SEM_CREATOR_FNAME);
-    sem_unlink(SEM_CLIENT_FNAME);
-    sem_unlink(SEM_RECONSTRUCTOR_FNAME);
+    sem_unlink(SEM_READ_PROCESS_FNAME);
+    sem_unlink(SEM_WRITE_PROCESS_FNAME);
 
-    sem_t *sem_crt = sem_open(SEM_CREATOR_FNAME, O_CREAT, 0644, 1);
-    if (sem_crt == SEM_FAILED) {
-        perror("sem_open/creator");
+    sem_t *sem_read = sem_open(SEM_READ_PROCESS_FNAME, O_CREAT, 0644, 1);
+    if (sem_read == SEM_FAILED) {
+        perror("sem_open/read");
         exit(EXIT_FAILURE);
     }
-    sem_t *sem_clt = sem_open(SEM_CLIENT_FNAME, O_CREAT, 0644, 0);
-    if (sem_clt == SEM_FAILED) {
-        perror("sem_open/client");
-        exit(EXIT_FAILURE);
-    }
-    sem_t *sem_rcstr = sem_open(SEM_RECONSTRUCTOR_FNAME, O_CREAT, 0644, 0);
-    if (sem_rcstr == SEM_FAILED) {
-        perror("sem_open/reconstructor");
+    sem_t *sem_write = sem_open(SEM_WRITE_PROCESS_FNAME, O_CREAT, 0644, 0);
+    if (sem_write == SEM_FAILED) {
+        perror("sem_open/write");
         exit(EXIT_FAILURE);
     }
 
@@ -113,7 +110,7 @@ int main(int argc, char *argv[])
 
     // Start visualization of mem block
     while(true) {
-        sem_wait(sem_crt);
+        sem_wait(sem_read);
         
         for (int i = 0; i < numChars; i++) {
             printf("buffer[%d] = \"%c\" | time: %s\n", i, buffer[i].character, buffer[i].time);
@@ -121,17 +118,15 @@ int main(int argc, char *argv[])
 
         printf("--------------------------------------\n");
 
-        sem_post(sem_clt);
-        sem_post(sem_rcstr);
+        sem_post(sem_write);
     }
 
     detach_struct(sharedStruct);
     detach_buffer(buffer);
 
     // Destroy the shared mem block and semaphores
-    sem_close(sem_crt);
-    sem_close(sem_clt);
-    sem_close(sem_rcstr);
+    sem_close(sem_read);
+    sem_close(sem_write);
 
     destroy_memory_block(STRUCT_LOCATION);
     destroy_memory_block(BUFFER_LOCATION);

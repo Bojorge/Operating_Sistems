@@ -18,12 +18,13 @@
 typedef struct {
     int bufferSize;
     int writeIndex, readIndex;
+    int readingFileIndex;
     int clientBlocked, recBlocked;
     int charsTransferred, charsRemaining;
     int memUsed;
     int clientUserTime, clientKernelTime;
     int recUserTime, recKernelTime;
-    bool writingFinished, readingFinished;
+    bool writingFinished, readingFinished, statsInited;
 } SharedData;
 
 #define MAX_TIME_LENGTH 21
@@ -48,9 +49,8 @@ bool destroy_memory_block(char *filename);
 #define STRUCT_LOCATION "creador.c"
 #define BUFFER_LOCATION "destroy.c"
 
-#define SEM_CREATOR_FNAME "/mycreador"
-#define SEM_CLIENT_FNAME "/mycliente"
-#define SEM_RECONSTRUCTOR_FNAME "/myreconstructor"
+#define SEM_READ_PROCESS_FNAME "/myprocessread"
+#define SEM_WRITE_PROCESS_FNAME "/myprocesswrite"
 #define SEM_READ_VARIABLE_FNAME "/mybufferreadvariable"
 #define SEM_WRITE_VARIABLE_FNAME "/mybufferwritevariable"
 
