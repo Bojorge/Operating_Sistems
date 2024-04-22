@@ -1,76 +1,82 @@
-// shared_memory.c
-
-
-
-#include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <errno.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #include "shared_memory.h"
 
+#define IPC_RESULT_ERROR (-1)
 
-// Función para inicializar el buffer circular
-void initializeCircularBuffer(SharedMemory *sm, size_t size) {
-    sm->buffer = (char *)malloc(size);
-    
-    if (sm->buffer == NULL) {
-        fprintf(stderr, "Error: No se pudo asignar memoria para el buffer.\n");
+static int get_shared_block(char *location, int size) {
+    key_t key;
+    key = ftok(location, 0);
+
+    if (key == IPC_RESULT_ERROR) {
+        return IPC_RESULT_ERROR;
+    }
+
+    return shmget(key, size, 0644 | IPC_CREAT);
+}
+
+
+SharedData * attach_struct(char *struct_location, int size) {
+    int shared_block_id = get_shared_block(struct_location, size);
+
+    if (shared_block_id == IPC_RESULT_ERROR) {
+        return NULL;
+    }
+
+    SharedData *sharedData = shmat(shared_block_id, NULL, 0);
+
+    return sharedData;
+}
+
+Sentence * attach_buffer(char *buffer_location, int size) {
+    int shared_block_id = get_shared_block(buffer_location, size);
+
+    if (shared_block_id == IPC_RESULT_ERROR) {
+        return NULL;
+    }
+
+    Sentence *sharedData = shmat(shared_block_id, NULL, 0);
+
+    return sharedData;
+}
+
+// c | time: Apr 19 2024 19:00:00
+void init_mem_block(char *struct_location, char *buffer_location, int sizeStruct, int sizeBuffer) {
+    int struct_block_id = get_shared_block(struct_location, sizeStruct);
+    int buffer_block_id = get_shared_block(buffer_location, sizeBuffer);
+
+    if (struct_block_id == IPC_RESULT_ERROR) {
+        printf("Error al obtener identificador del bloque compartido struct.\n");
         exit(EXIT_FAILURE);
     }
-    sm->bufferSize = size;
-    sm->writeIndex = 0;
-    sm->readIndex = 0;
-    sm->memUsed = 0;
-    memset(sm->buffer, '\0', size); // Llena el buffer con caracteres nulos
 
-}
-
-// Función para destruir el buffer circular
-void destroyCircularBuffer(SharedMemory *sm) {
-    free(sm->buffer);
-}
-
-// Función para escribir un carácter en el buffer
-int writeChar(SharedMemory *sm, char c) {
-    if (sm->memUsed < sm->bufferSize) {
-        sm->buffer[sm->writeIndex] = c;
-        sm->writeIndex = (sm->writeIndex + 1) % sm->bufferSize;
-        sm->memUsed++;
-        return 1;
-    } else {
-        printf("\n \n  ***   El buffer se llenó   ***\n");
-        return 0;
+    if (buffer_block_id == IPC_RESULT_ERROR) {
+        printf("Error al obtener identificador del bloque compartido buffer.\n");
+        exit(EXIT_FAILURE);
     }
 }
 
-// Función para mostrar el contenido del buffer
-void printBuffer(SharedMemory *sm) {
-    
-    printf("\r >>> Contenido del buffer: %s\n", sm->buffer);
-    fflush(stdout);
-    /*
-    printf("  >>> Contenido del buffer: ");
-    if (sm->memUsed == 0) {
-        printf("El buffer está vacío.\n");
-        return;
-    }
 
-    int i = sm->readIndex;
-    int count = 0;
-    while (count < sm->memUsed) {
-        printf("%c ", sm->buffer[i]);
+bool detach_struct(SharedData *block) {
+    return (shmdt(block) != -1);
+}
 
-        //fflush(stdout);
-        i = (i + 1) % sm->bufferSize;
-        count++;
-    }
-    printf("\n");
-    */
+bool detach_buffer(Sentence *buffer) {
+    return (shmdt(buffer) != -1);
 }
 
 
+bool destroy_memory_block(char *location) {
+    int shared_block_id = get_shared_block(location, 0);
+
+    if (shared_block_id == IPC_RESULT_ERROR) {
+        return NULL;
+    }
+
+    return (shmctl(shared_block_id, IPC_RMID, NULL) != IPC_RESULT_ERROR);
+}

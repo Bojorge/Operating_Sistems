@@ -1,17 +1,15 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -std=c99
-LDFLAGS = -lrt
-OBJS = shared_memory.o
-SRCS = creador.c cliente.c
-EXECUTABLES = creador cliente
+CC		= gcc
+CFLAGS	= -g
+OBJS	= shared_memory.o
+EXE		= creador cliente reconstructor
 
-all: $(EXECUTABLES)
+all: $(OBJS) $(EXE)
 
-creador: creador.c $(OBJS)   # Agregado shared_memory.o como una dependencia
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+$(OBJS): shared_memory.c
+	$(CC) $(CFLAGS) -c shared_memory.c -o $(OBJS)
 
-cliente: cliente.c $(OBJS)   # Agregado shared_memory.o como una dependencia
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+$(EXE): %: %.c $(SHARED_OBJ)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@
 
-clean:
-	rm -rf $(EXECUTABLES)
+clean: 
+	rm -f *.o *.$(OBJS) $(EXE)

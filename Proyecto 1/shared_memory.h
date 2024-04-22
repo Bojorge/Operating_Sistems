@@ -1,31 +1,59 @@
-// shared_memory.h
-
-
 #ifndef SHARED_MEMORY_H
 #define SHARED_MEMORY_H
 
-#define MEMORY_OBJECT_NAME "/sharedProcessMemory"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/shm.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <time.h>
+#include <semaphore.h>
+#include <fcntl.h>
+
+// Structs
+typedef struct {
+    int bufferSize;
+    int writeIndex, readIndex;
+    int readingFileIndex;
+    int clientBlocked, recBlocked;
+    int charsTransferred, charsRemaining;
+    int memUsed;
+    int clientUserTime, clientKernelTime;
+    int recUserTime, recKernelTime;
+    bool writingFinished, readingFinished, statsInited;
+} SharedData;
+
+#define MAX_TIME_LENGTH 21
 
 typedef struct {
-    char *buffer;
-    size_t bufferSize;
-    size_t writeIndex; // Head
-    size_t readIndex;  // Tail
-    size_t memUsed;    // Count
-} SharedMemory;
+    char character;
+    char time[MAX_TIME_LENGTH];
+} Sentence;
 
-// Función para inicializar el buffer circular
-void initializeCircularBuffer(SharedMemory *sm, size_t size);
+// Funciones
+void init_mem_block(char *struct_location, char *buffer_location, int sizeStruct, int sizeBuffer);
 
-// Función para destruir el buffer circular
-void destroyCircularBuffer(SharedMemory *sm);
+SharedData * attach_struct(char *struct_location, int size);
+Sentence * attach_buffer(char *buffer_location, int size);
 
-// Función para escribir un carácter en el buffer
-int writeChar(SharedMemory *sm, char c);
+bool detach_struct(SharedData *sharedStruct);
+bool detach_buffer(Sentence *buffer);
 
-// Función para mostrar el contenido del buffer
-void printBuffer(SharedMemory *sm);
+bool destroy_memory_block(char *filename);
+
+// Variables
+#define STRUCT_LOCATION "creador.c"
+#define BUFFER_LOCATION "destroy.c"
+
+#define SEM_READ_PROCESS_FNAME "/myprocessread"
+#define SEM_WRITE_PROCESS_FNAME "/myprocesswrite"
+#define SEM_READ_VARIABLE_FNAME "/mybufferreadvariable"
+#define SEM_WRITE_VARIABLE_FNAME "/mybufferwritevariable"
+
+#define MAX_LENGTH 100
 
 #endif
-
-

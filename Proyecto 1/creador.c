@@ -1,61 +1,137 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #include <string.h>
-#include <errno.h>
-#include <time.h>
 
-#define MEMORY_OBJECT_NAME "/sharedMemory"
+#include "shared_memory.h"
 
-typedef struct {
-    char buffer[100]; // Buffer para almacenar caracteres
-    int bufferSize;         // Tamaño del buffer
-} SharedMemory;
-
-void initializeSharedMemory(SharedMemory *sm, int bufferSize) {
-    sm->bufferSize = bufferSize;
-    memset(sm->buffer, '\0', bufferSize); // Inicializa el buffer con caracteres nulos
+void init_empty_struct (SharedData *sharedData, int numChars) {
+    sharedData->bufferSize = numChars;
+    sharedData->writeIndex = 0;
+    sharedData->readIndex = 0;
+    sharedData->readingFileIndex = 0;
+    sharedData->clientBlocked = 0;
+    sharedData->recBlocked = 0;
+    sharedData->charsTransferred = 0;
+    sharedData->charsRemaining = 0;
+    sharedData->clientUserTime = 0;
+    sharedData->clientKernelTime = 0;
+    sharedData->recUserTime = 0;
+    sharedData->recKernelTime = 0;
+    sharedData->memUsed = sizeof(SharedData) + (sizeof(Sentence) * numChars);
+    sharedData->writingFinished = false;
+    sharedData->readingFinished = false;
+    sharedData->statsInited = false;
 }
 
-int main() {
-    int bufferSize;
+void printSharedData(SharedData *sharedData) {
+    /*printf("sharedData->bufferSize: %d\n", sharedData->bufferSize);
+    printf("sharedData->writeIndex: %d\n", sharedData->writeIndex);
+    printf("sharedData->readIndex: %d\n", sharedData->readIndex);
+    printf("sharedData->clientBlocked: %d\n", sharedData->clientBlocked);
+    printf("sharedData->recBlocked: %d\n", sharedData->recBlocked);
+    printf("sharedData->charsTransferred: %d\n", sharedData->charsTransferred);
+    printf("sharedData->charsRemaining: %d\n", sharedData->charsRemaining);
+    printf("sharedData->memUsed: %d\n", sharedData->memUsed);
+    printf("sharedData->clientUserTime: %d\n", sharedData->clientUserTime);
+    printf("sharedData->clientKernelTime: %d\n", sharedData->clientKernelTime);
+    printf("sharedData->recUserTime: %d\n", sharedData->recUserTime);
+    printf("sharedData->recKernelTime: %d\n", sharedData->recKernelTime);*/
+}
+
+int main(int argc, char *argv[]) 
+{
+    destroy_memory_block(STRUCT_LOCATION);
+    destroy_memory_block(BUFFER_LOCATION);
+    
+    int numChars;
     printf("Ingrese la cantidad de caracteres a compartir: ");
-    scanf("%d", &bufferSize);
+    scanf("%d", &numChars);
 
-    size_t sharedSize = sizeof(char) * bufferSize;
+    // Set the semaphores
+    sem_unlink(SEM_READ_PROCESS_FNAME);
+    sem_unlink(SEM_WRITE_PROCESS_FNAME);
 
-    printf("Tamaño de la memoria compartida: %zu bytes\n", sharedSize);
-
-    int fd = shm_open(MEMORY_OBJECT_NAME, O_CREAT | O_RDWR, 0666);
-    if (fd == -1) {
-        perror("Error al crear/abrir el objeto de memoria compartida");
+    sem_t *sem_read = sem_open(SEM_READ_PROCESS_FNAME, O_CREAT, 0644, 1);
+    if (sem_read == SEM_FAILED) {
+        perror("sem_open/read");
+        exit(EXIT_FAILURE);
+    }
+    sem_t *sem_write = sem_open(SEM_WRITE_PROCESS_FNAME, O_CREAT, 0644, 0);
+    if (sem_write == SEM_FAILED) {
+        perror("sem_open/write");
         exit(EXIT_FAILURE);
     }
 
-    if (ftruncate(fd, sharedSize) == -1) {
-        perror("Error al establecer el tamaño de la memoria compartida");
+    for (int i = 0; i < numChars; i++) {
+        // Make every semaphore name for each buffer space
+        char sem_write_name[MAX_LENGTH];
+        sprintf(sem_write_name, "%s%d", SEM_WRITE_VARIABLE_FNAME, i);
+
+        char sem_read_name[MAX_LENGTH];
+        sprintf(sem_read_name, "%s%d", SEM_READ_VARIABLE_FNAME, i);
+
+        // Unlink them to prevent
+        sem_unlink(sem_write_name);
+        sem_unlink(sem_read_name);
+
+        // Init each semaphore
+        sem_t *sem_temp_write = sem_open(sem_write_name, O_CREAT, 0644, 1);
+        if (sem_temp_write == SEM_FAILED) {
+            perror("sem_open/variables");
+            exit(EXIT_FAILURE);
+        }
+
+        sem_t *sem_temp_read = sem_open(sem_read_name, O_CREAT, 0644, 0);
+        if (sem_temp_read == SEM_FAILED) {
+            perror("sem_open/variables");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Initialize shared mem blocks
+    init_mem_block(STRUCT_LOCATION, BUFFER_LOCATION, sizeof(SharedData), numChars * sizeof(Sentence));
+
+    // Attach to struct shared mem block
+    SharedData *sharedStruct = attach_struct(STRUCT_LOCATION, sizeof(SharedData));
+    if (sharedStruct == NULL) {
+        printf("Error al adjuntar al bloque de memoria compartida.\n");
         exit(EXIT_FAILURE);
     }
 
-    SharedMemory *sharedMemory = (SharedMemory *)mmap(NULL, sharedSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (sharedMemory == MAP_FAILED) {
-        perror("Error al mapear la memoria compartida");
+    // Attach to buffer mem block
+    Sentence *buffer = attach_buffer(BUFFER_LOCATION, numChars * sizeof(Sentence));
+    if (buffer == NULL) {
+        printf("Error al adjuntar al bloque de memoria compartida.\n");
         exit(EXIT_FAILURE);
     }
 
-    initializeSharedMemory(sharedMemory, bufferSize);
+    // Initialize empty struct for the shared mem block
+    init_empty_struct(sharedStruct, numChars);
 
-    printf("Visualización en tiempo real del contenido de la memoria compartida:\n");
-    while (1) {
-        printf("Buffer: %s\n", sharedMemory->buffer);
-        sleep(1); // Espera 1 segundo antes de volver a visualizar
+    // Start visualization of mem block
+    while(true) {
+        sem_wait(sem_read);
+        printf("\033[0;0H\033[2J"); // Mover el cursor a la posición (0, 0) y borrar la pantalla
+        fflush(stdout);
+        for (int i = 0; i < numChars; i++) {
+            printf("buffer[%d] = \"%c\" | time: %s\n", i, buffer[i].character, buffer[i].time);
+        }
+
+        printf("--------------------------------------\n");
+        fflush(stdout);
+
+        sem_post(sem_write);
     }
 
-    munmap(sharedMemory, sharedSize);
-    close(fd);
+    detach_struct(sharedStruct);
+    detach_buffer(buffer);
+
+    // Destroy the shared mem block and semaphores
+    sem_close(sem_read);
+    sem_close(sem_write);
+
+    destroy_memory_block(STRUCT_LOCATION);
+    destroy_memory_block(BUFFER_LOCATION);
 
     return 0;
 }
