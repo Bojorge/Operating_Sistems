@@ -19,13 +19,22 @@ typedef struct {
     int bufferSize;
     int writeIndex, readIndex;
     int readingFileIndex;
-    int clientBlocked, recBlocked;
-    int charsTransferred, charsRemaining;
+    int clientBlockedTime, reconsBlockedTime;
+    int charsTransferred, charsInBuffer;
     int memUsed;
     int clientUserTime, clientKernelTime;
     int recUserTime, recKernelTime;
-    bool writingFinished, readingFinished, statsInited;
+    bool writingFinished, statsInited;
+    bool clientEndedProcess, reconsEndedProcess;
 } SharedData;
+
+#define SEM_W_INDEX "/writeIndexSem"
+#define SEM_R_INDEX "/readIndexSem"
+#define SEM_RF_INDEX "/readFileIndexSem"
+#define SEM_CB_TIME "/clientBlockTimeSem"
+#define SEM_RB_TIME "/reconsBlockTimeSem"
+#define SEM_C_TRANSF "/charsTransfSem"
+#define SEM_C_BUFFER "/charsBufferSem"
 
 #define MAX_TIME_LENGTH 21
 
@@ -49,8 +58,8 @@ bool destroy_memory_block(char *filename);
 #define STRUCT_LOCATION "creador.c"
 #define BUFFER_LOCATION "destroy.c"
 
-#define SEM_READ_PROCESS_FNAME "/myprocessread"
-#define SEM_WRITE_PROCESS_FNAME "/myprocesswrite"
+#define SEM_CLIENT_PROCESS_FNAME "/myprocessclient"
+#define SEM_RECONS_PROCESS_FNAME "/myprocessrecons"
 #define SEM_READ_VARIABLE_FNAME "/mybufferreadvariable"
 #define SEM_WRITE_VARIABLE_FNAME "/mybufferwritevariable"
 

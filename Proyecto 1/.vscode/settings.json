@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "shared_memory.h": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "string.h": "c"
     }
 }
