@@ -44,17 +44,19 @@ void insert_logic(FILE *file, SharedData *sharedData, Sentence *buffer) {
 
     // Read the entire contents of the file and concatenate it to the dynamic string
     char character2;
-    while ((character2 = fgetc(file)) != EOF) {
-        // Concatenate the character to the end of the dynamic string
+    int characters_added = 0;
+    while ((character2 = fgetc(file)) != EOF && characters_added < 20) {
+        // Concatenar el caracter al final del string dinámico
         buffer_size++;
         char *temp = realloc(dynamic_string, buffer_size * sizeof(char));
         if (temp == NULL) {
-            fprintf(stderr, "Error: Failed to reallocate memory\n");
+            fprintf(stderr, "Error: No se pudo realocar la memoria\n");
             free(dynamic_string);
             exit(EXIT_FAILURE);
         }
         dynamic_string = temp;
         dynamic_string[length++] = character2;
+        characters_added++;
     }
 
     // Get semaphore for the writing space to check if writing is available
