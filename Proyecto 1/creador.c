@@ -42,21 +42,6 @@ void init_struct_semaphores() {
     sem_t *sem_characterBuffer = sem_open(SEM_C_BUFFER, O_CREAT, 0644, 1);
 }
 
-void printSharedData(SharedData *sharedData) {
-    printf("sharedData->bufferSize: %d\n", sharedData->bufferSize);
-    printf("sharedData->writeIndex: %d\n", sharedData->writeIndex);
-    printf("sharedData->readIndex: %d\n", sharedData->readIndex);
-    printf("sharedData->clientBlockedTime: %d\n", sharedData->clientBlockedTime);
-    printf("sharedData->recBlockedTime: %d\n", sharedData->reconsBlockedTime);
-    printf("sharedData->charsTransferred: %d\n", sharedData->charsTransferred);
-    printf("sharedData->charsInBuffer: %d\n", sharedData->charsInBuffer);
-    printf("sharedData->memUsed: %d\n", sharedData->memUsed);
-    printf("sharedData->clientUserTime: %d\n", sharedData->clientUserTime);
-    printf("sharedData->clientKernelTime: %d\n", sharedData->clientKernelTime);
-    printf("sharedData->recUserTime: %d\n", sharedData->recUserTime);
-    printf("sharedData->recKernelTime: %d\n", sharedData->recKernelTime);
-}
-
 void printBuffer(Sentence *buffer, int numChars) {
     for (int i = 0; i < numChars; i++) {
             printf("buffer[%d] = \"%c\" | time: %s\n", i, buffer[i].character, buffer[i].time);
@@ -127,7 +112,6 @@ int main(int argc, char *argv[])
 
     // Start visualization of mem block
     while(true) {
-        printSharedData(sharedData);
         printBuffer(buffer, numChars);
         sleep(1);
     }

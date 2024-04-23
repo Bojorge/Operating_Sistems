@@ -1,7 +1,7 @@
 CC		= gcc
 CFLAGS	= -g
 OBJS	= shared_memory.o
-EXE		= creador cliente reconstructor
+EXE		= creador cliente reconstructor estadisticas
 
 all: $(OBJS) $(EXE)
 

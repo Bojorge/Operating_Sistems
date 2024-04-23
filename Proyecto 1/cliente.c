@@ -115,10 +115,12 @@ void insert_manually(FILE *file, SharedData *sharedData, Sentence *buffer) {
     fseek(file, 0, SEEK_END);
     long file_length = ftell(file);
     rewind(file);
+    clock_t start, end;
 
     bool checkBreak = false;
 
     while (ftell(file) < file_length) {
+
         char input[100];
         fgets(input, sizeof(input), stdin); // Lee la entrada del usuario
 
@@ -135,11 +137,16 @@ void insert_manually(FILE *file, SharedData *sharedData, Sentence *buffer) {
         }
 
         // Esperar hasta que se presione Enter y se tenga el semaforo libre para escribir
-        else if (strcmp(input, "\n") == 0) {
+        if (strcmp(input, "\n") == 0) {
             if (wait_semaphores()) {
+                start = clock();
                 insert_logic(file, sharedData, buffer);
+                
                 post_semaphores();
             }
+            end = clock();
+
+            sharedData->clientBlockedTime += ((double)(end - start) / CLOCKS_PER_SEC) * 1000.0;
         }
     }
     if (checkBreak) {
@@ -159,11 +166,11 @@ void insert_automatically(FILE *file, int interval, SharedData *sharedData, Sent
     fseek(file, 0, SEEK_END);
     long file_length = ftell(file);
     rewind(file);
+    clock_t start, end;
 
     bool checkBreak = false;
 
     while (ftell(file) < file_length) { // Mientras no se llegue al final del archivo
-
         // Comprueba si en alguna instancia se termino el proceso a la fuerza
         if (sharedData->clientEndedProcess || sharedData->statsInited) {
             checkBreak = true;
@@ -172,9 +179,14 @@ void insert_automatically(FILE *file, int interval, SharedData *sharedData, Sent
 
         // Esperamos a que todos los semaforos necesarios esten
         if (wait_semaphores()) {
+            start = clock();
             insert_logic(file, sharedData, buffer);
+
             post_semaphores();
         }     
+        end = clock();
+        sharedData->clientBlockedTime += ((double)(end - start) / CLOCKS_PER_SEC) * 1000.0;
+
         sleep(interval);
     }
     if (checkBreak) {

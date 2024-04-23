@@ -9,21 +9,23 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <time.h>
 #include <semaphore.h>
 #include <fcntl.h>
+#include <sys/resource.h>
 
 // Structs
 typedef struct {
     int bufferSize;
     int writeIndex, readIndex;
     int readingFileIndex;
-    int clientBlockedTime, reconsBlockedTime;
+    double clientBlockedTime, reconsBlockedTime;
     int charsTransferred, charsInBuffer;
     int memUsed;
-    int clientUserTime, clientKernelTime;
-    int recUserTime, recKernelTime;
+    long clientUserTime, clientKernelTime;
+    long recUserTime, recKernelTime;
     bool writingFinished, statsInited;
     bool clientEndedProcess, reconsEndedProcess;
 } SharedData;

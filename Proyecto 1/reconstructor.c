@@ -109,6 +109,7 @@ void read_logic(SharedData *sharedData, Sentence *buffer) {
 
 void read_manually(SharedData *sharedData, Sentence *buffer) {
     bool checkBreak = false;
+    clock_t start, end;
 
     while (!sharedData->writingFinished) {
         char input[100];
@@ -129,9 +130,11 @@ void read_manually(SharedData *sharedData, Sentence *buffer) {
         // Esperar hasta que se presione enter y que los semaforos esten libres
         if (strcmp(input, "\n") == 0) {
             if (wait_semaphores()) {
+                start = clock();
                 read_logic(sharedData, buffer);
                 post_semaphores();
             }
+            sharedData->reconsBlockedTime += ((double)(end - start) / CLOCKS_PER_SEC) * 1000.0;
         }
     }
     if (checkBreak) {
@@ -146,6 +149,7 @@ void read_manually(SharedData *sharedData, Sentence *buffer) {
 
 void read_automatically(SharedData *sharedData, Sentence *buffer, int interval) {
     bool checkBreak = false;
+    clock_t start, end;
 
     while (!sharedData->writingFinished) {
         // Comprueba si en alguna instancia se termino el proceso a la fuerza
@@ -156,9 +160,12 @@ void read_automatically(SharedData *sharedData, Sentence *buffer, int interval) 
 
         // Esperamos a ver si se puede leer
         if (wait_semaphores()) {
+            start = clock();
             read_logic(sharedData, buffer);
             post_semaphores();
         }
+        end = clock();
+        sharedData->reconsBlockedTime += ((double)(end - start) / CLOCKS_PER_SEC) * 1000.0;
 
         // Esperar el intervalo especificado antes de la próxima lectura
         sleep(interval);
