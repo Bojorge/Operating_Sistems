@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    if (size < 4) {
+    if (size < 1) {
         if (rank == 0) {
             printf("Se necesitan al menos cuatro procesos para este ejemplo (1 maestro y 3 esclavos).\n");
         }
