@@ -1,2 +1,2 @@
-192.168.0.18 slots=1 master
-192.168.0.12 slots=1 slave
+bojorge@192.168.0.18 slots=1 master
+andy@192.168.0.12 slots=1 slave
