@@ -71,16 +71,6 @@ void count_words(char *text, char words[MAX_WORD_COUNT][MAX_WORD_LENGTH], int co
     }
 }
 
-void save_to_file(const char *filename, unsigned char *data, int length) {
-    FILE *file = fopen(filename, "wb");
-    if (file == NULL) {
-        fprintf(stderr, "Error al abrir el archivo para guardar\n");
-        exit(1);
-    }
-    fwrite(data, 1, length, file);
-    fclose(file);
-}
-
 int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
 
@@ -98,26 +88,27 @@ int main(int argc, char** argv) {
     int ciphertext_len;
 
     if (rank == 0) {
-        // Servidor-Cluster
+        // Servidor
 
-        // Leer texto cifrado desde el cliente
-        FILE *file = fopen("texto_cifrado.bin", "rb");
+        // Leer texto desde el archivo
+        FILE *file = fopen("texto.txt", "r");
         if (file == NULL) {
-            fprintf(stderr, "Error al abrir el archivo cifrado\n");
+            fprintf(stderr, "Error al abrir el archivo\n");
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
 
         fseek(file, 0, SEEK_END);
-        ciphertext_len = ftell(file);
+        textLength = ftell(file);
         fseek(file, 0, SEEK_SET);
 
-        ciphertext = (unsigned char*)malloc(ciphertext_len * sizeof(unsigned char));
-        if (ciphertext == NULL) {
+        plaintext = (unsigned char*)malloc((textLength + 1) * sizeof(unsigned char));
+        if (plaintext == NULL) {
             fprintf(stderr, "Error al asignar memoria\n");
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
 
-        fread(ciphertext, 1, ciphertext_len, file);
+        fread(plaintext, 1, textLength, file);
+        plaintext[textLength] = '\0';
         fclose(file);
 
         // Generar clave y IV aleatorios
@@ -125,6 +116,10 @@ int main(int argc, char** argv) {
             fprintf(stderr, "Error generando clave o IV\n");
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
+
+        // Cifrar el texto
+        ciphertext = (unsigned char*)malloc((textLength + AES_BLOCK_SIZE) * sizeof(unsigned char));
+        ciphertext_len = encrypt(plaintext, textLength, key, iv, ciphertext);
 
         // Enviar la longitud del texto cifrado a todos los procesos
         MPI_Bcast(&ciphertext_len, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -136,7 +131,7 @@ int main(int argc, char** argv) {
         MPI_Bcast(key, sizeof(key), MPI_CHAR, 0, MPI_COMM_WORLD);
         MPI_Bcast(iv, sizeof(iv), MPI_CHAR, 0, MPI_COMM_WORLD);
 
-        // Procesar resultados de los nodos
+        // Recibir y procesar resultados de los clientes
         char words[MAX_WORD_COUNT][MAX_WORD_LENGTH];
         int counts[MAX_WORD_COUNT] = {0};
         int unique_word_count = 0;
@@ -174,22 +169,8 @@ int main(int argc, char** argv) {
 
         printf("La palabra que más se repite es: %s (repetida %d veces)\n", most_repeated_word, max_count);
 
-        // Descifrar todo el texto para guardarlo
-        decryptedtext = (unsigned char*)malloc((ciphertext_len + 1) * sizeof(unsigned char));
-        if (decryptedtext == NULL) {
-            fprintf(stderr, "Error al asignar memoria\n");
-            MPI_Abort(MPI_COMM_WORLD, 1);
-        }
-
-        int decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv, decryptedtext);
-        decryptedtext[decryptedtext_len] = '\0';
-
-        // Guardar el archivo descifrado
-        save_to_file("texto_descifrado.txt", decryptedtext, decryptedtext_len);
-
-        // Liberar memoria
+        free(plaintext);
         free(ciphertext);
-        free(decryptedtext);
     } else {
         // Cliente
 
@@ -228,11 +209,20 @@ int main(int argc, char** argv) {
 
         count_words((char*)decryptedtext, words, counts, &unique_word_count);
 
-        // Enviar la palabra más repetida y su conteo al servidor
-        MPI_Send(words[0], MAX_WORD_LENGTH, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-        MPI_Send(&counts[0], 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        // Encontrar la palabra que más se repite
+        int max_count = 0;
+        char most_repeated_word[MAX_WORD_LENGTH];
+        for (int i = 0; i < unique_word_count; i++) {
+            if (counts[i] > max_count) {
+                max_count = counts[i];
+                strcpy(most_repeated_word, words[i]);
+            }
+        }
 
-        // Liberar memoria
+        // Enviar la palabra más repetida y su conteo al servidor
+        MPI_Send(most_repeated_word, MAX_WORD_LENGTH, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(&max_count, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
         free(receivedCiphertext);
         free(decryptedtext);
     }
