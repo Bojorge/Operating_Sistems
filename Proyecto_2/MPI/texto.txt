@@ -1,0 +1,3 @@
+mpicc -I/home/curso/Desktop/sharedfolder/MPI/Driver -o openmpi /home/curso/Desktop/sharedfolder/MPI/Driver/driver_lib.c /home/curso/Desktop/sharedfolder/MPI/openmpi.c -lssl -lcrypto
+
+mpirun --hostfile /etc/hosts openmpi

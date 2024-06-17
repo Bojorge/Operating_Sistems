@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include "Driver/driver_lib.h"
 
 // Estructura para almacenar palabras y sus frecuencias
 typedef struct {
@@ -159,7 +160,7 @@ int main(int argc, char** argv) {
     long fileSize = 0;
 
     if (rank == 0) {
-        FILE* file = fopen("texto.txt", "r");
+        FILE* file = fopen("mobydick.txt", "r");
         if (file == NULL) {
             fprintf(stderr, "No se pudo abrir el archivo.\n");
             MPI_Abort(MPI_COMM_WORLD, 1);
@@ -273,8 +274,13 @@ int main(int argc, char** argv) {
         // Encontrar la palabra más frecuente
         qsort(totalWordCounts, combinedWordCountSize, sizeof(WordCount), compareWordCount);
 
-        printf("\n\nLa palabra más frecuente es: \"%s\" y la cantidad de veces que se repite es: %d\n", totalWordCounts[0].word, totalWordCounts[0].count);
+        printf("\nLa palabra más frecuente es: \"%s\" y la cantidad de veces que se repite es: %d\n", totalWordCounts[0].word, totalWordCounts[0].count);
+        printf("\nLa segunda palabra más frecuente es: \"%s\" y la cantidad de veces que se repite es: %d\n", totalWordCounts[1].word, totalWordCounts[1].count);
 
+        int fd = open_serial_port("/dev/ttyACM0");
+        int bytes_written = send_word(fd, ("%s\n", totalWordCounts[0].word));
+
+        close_serial_port(fd);
         free(totalWordCounts);
         free(recvCounts);
         free(displs);
